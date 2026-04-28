@@ -1,0 +1,61 @@
+{
+  "existing": [
+    {
+      "batch": 1,
+      "file": "cwe190_batch1_images.json",
+      "count": 10
+    },
+    {
+      "batch": 2,
+      "file": "cwe190_batch2_network.json",
+      "count": 20
+    },
+    {
+      "batch": 3,
+      "file": "cwe190_batch3_allocators.json",
+      "count": 20
+    }
+  ],
+  "pending": [
+    {
+      "batch": 4,
+      "name": "Archives",
+      "file": "cwe190_batch4_archives.json",
+      "cve_range": "CVE-2023-SYNTH-261 to CVE-2023-SYNTH-280",
+      "count": 20,
+      "theme": "ZIP, TAR, RAR, 7z, GZIP processing"
+    },
+    {
+      "batch": 5,
+      "name": "Crypto",
+      "file": "cwe190_batch5_crypto.json",
+      "cve_range": "CVE-2023-SYNTH-281 to CVE-2023-SYNTH-300",
+      "count": 20,
+      "theme": "RSA, AES, HMAC, DH, ECC, key management"
+    },
+    {
+      "batch": 6,
+      "name": "Video Codecs",
+      "file": "cwe190_batch6_codecs.json",
+      "cve_range": "CVE-2023-SYNTH-301 to CVE-2023-SYNTH-320",
+      "count": 20,
+      "theme": "H.264, VP9, HEVC, MPEG-2, AV1, VP8"
+    },
+    {
+      "batch": 7,
+      "name": "Kernel",
+      "file": "cwe190_batch7_kernel.json",
+      "cve_range": "CVE-2023-SYNTH-321 to CVE-2023-SYNTH-340",
+      "count": 20,
+      "theme": "Linux kernel drivers, DMA, ioctl, sysfs"
+    },
+    {
+      "batch": 8,
+      "name": "Databases",
+      "file": "cwe190_batch8_databases.json",
+      "cve_range": "CVE-2023-SYNTH-341 to CVE-2023-SYNTH-360",
+      "count": 20,
+      "theme": "Database engines, WAL, B-trees, indexes"
+    }
+  ]
+}

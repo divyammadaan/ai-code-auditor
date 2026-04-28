@@ -1,0 +1,162 @@
+[
+  {
+    "cwe": "CWE-416",
+    "cve_id": "CVE-2023-SYNTH-121",
+    "cvss_score": "8.5",
+    "context": "crypto_tls",
+    "function": "tls_cleanup_handshake",
+    "status": "full_data_received_validated"
+  },
+  {
+    "cwe": "CWE-416",
+    "cve_id": "CVE-2023-SYNTH-122",
+    "cvss_score": "8.5",
+    "context": "crypto_tls",
+    "function": "x509_verify_chain",
+    "status": "full_data_received_validated"
+  },
+  {
+    "cwe": "CWE-416",
+    "cve_id": "CVE-2023-SYNTH-123",
+    "cvss_score": "8.5",
+    "context": "crypto_tls",
+    "function": "evp_cipher_ctx_reset",
+    "status": "full_data_received_validated"
+  },
+  {
+    "cwe": "CWE-416",
+    "cve_id": "CVE-2023-SYNTH-124",
+    "cvss_score": "8.5",
+    "context": "crypto_tls",
+    "function": "rsa_key_clear",
+    "status": "full_data_received_validated"
+  },
+  {
+    "cwe": "CWE-416",
+    "cve_id": "CVE-2023-SYNTH-125",
+    "cvss_score": "8.5",
+    "context": "crypto_tls",
+    "function": "pkcs7_process_signer_info",
+    "status": "full_data_received_validated"
+  },
+  {
+    "cwe": "CWE-416",
+    "cve_id": "CVE-2023-SYNTH-126",
+    "cvss_score": "8.5",
+    "context": "crypto_tls",
+    "function": "ssl_session_cache_evict",
+    "status": "full_data_received_validated"
+  },
+  {
+    "cwe": "CWE-416",
+    "cve_id": "CVE-2023-SYNTH-127",
+    "cvss_score": "8.5",
+    "context": "crypto_tls",
+    "function": "hmac_ctx_reuse",
+    "status": "full_data_received_validated"
+  },
+  {
+    "cwe": "CWE-416",
+    "cve_id": "CVE-2023-SYNTH-128",
+    "cvss_score": "8.5",
+    "context": "crypto_tls",
+    "function": "asn1_item_free",
+    "status": "full_data_received_validated"
+  },
+  {
+    "cwe": "CWE-416",
+    "cve_id": "CVE-2023-SYNTH-129",
+    "cvss_score": "8.5",
+    "context": "crypto_tls",
+    "function": "tls_handle_server_key_exchange",
+    "status": "full_data_received_validated"
+  },
+  {
+    "cwe": "CWE-416",
+    "cve_id": "CVE-2023-SYNTH-130",
+    "cvss_score": "8.5",
+    "context": "crypto_tls",
+    "function": "ocsp_resp_ctx_free",
+    "status": "full_data_received_validated"
+  },
+  {
+    "cwe": "CWE-416",
+    "cve_id": "CVE-2023-SYNTH-131",
+    "cvss_score": "8.5",
+    "context": "crypto_tls",
+    "function": "ssl_clear_cipher_list",
+    "status": "full_data_received_validated"
+  },
+  {
+    "cwe": "CWE-416",
+    "cve_id": "CVE-2023-SYNTH-132",
+    "cvss_score": "8.5",
+    "context": "crypto_tls",
+    "function": "dtls_retransmit_flight",
+    "status": "full_data_received_validated"
+  },
+  {
+    "cwe": "CWE-416",
+    "cve_id": "CVE-2023-SYNTH-133",
+    "cvss_score": "8.5",
+    "context": "crypto_tls",
+    "function": "ssl_handshake_teardown",
+    "status": "full_data_received_validated"
+  },
+  {
+    "cwe": "CWE-416",
+    "cve_id": "CVE-2023-SYNTH-134",
+    "cvss_score": "8.5",
+    "context": "crypto_tls",
+    "function": "x509_name_cleanup",
+    "status": "full_data_received_validated"
+  },
+  {
+    "cwe": "CWE-416",
+    "cve_id": "CVE-2023-SYNTH-135",
+    "cvss_score": "8.5",
+    "context": "crypto_tls",
+    "function": "tls_process_ticket",
+    "status": "full_data_received_validated"
+  },
+  {
+    "cwe": "CWE-416",
+    "cve_id": "CVE-2023-SYNTH-136",
+    "cvss_score": "8.5",
+    "context": "crypto_tls",
+    "function": "s3_clear",
+    "status": "full_data_received_validated"
+  },
+  {
+    "cwe": "CWE-416",
+    "cve_id": "CVE-2023-SYNTH-137",
+    "cvss_score": "8.5",
+    "context": "crypto_tls",
+    "function": "tls_secret_cleanup",
+    "status": "full_data_received_validated"
+  },
+  {
+    "cwe": "CWE-416",
+    "cve_id": "CVE-2023-SYNTH-138",
+    "cvss_score": "8.5",
+    "context": "crypto_tls",
+    "function": "pkey_meth_free",
+    "status": "full_data_received_validated"
+  },
+  {
+    "cwe": "CWE-416",
+    "cve_id": "CVE-2023-SYNTH-139",
+    "cvss_score": "8.5",
+    "context": "crypto_tls",
+    "function": "tls_process_client_hello",
+    "status": "full_data_received_validated"
+  },
+  {
+    "cwe": "CWE-416",
+    "cve_id": "CVE-2023-SYNTH-140",
+    "cvss_score": "8.5",
+    "context": "crypto_tls",
+    "function": "x509_extension_free",
+    "status": "full_data_received_validated"
+  }
+]

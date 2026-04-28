@@ -1,0 +1,162 @@
+[
+  {
+    "cwe": "CWE-190",
+    "cve_id": "CVE-2023-SYNTH-241",
+    "cvss_score": "8.1",
+    "vulnerable_code": "void* custom_calloc(size_t nmemb, size_t size) {\n size_t total_size = nmemb * size;\n void* ptr = malloc(total_size);\n if (ptr) {\n memset(ptr, 0, total_size);\n }\n return ptr;\n}",
+    "secure_code": "void* custom_calloc(size_t nmemb, size_t size) {\n if (nmemb > 0 && size > SIZE_MAX / nmemb) return NULL;\n size_t total_size = nmemb * size;\n void* ptr = malloc(total_size);\n if (ptr) {\n memset(ptr, 0, total_size);\n }\n return ptr;\n}",
+    "explanation": "Integer overflow in total_size at line 2. If nmemb and size are large, their product wraps around SIZE_MAX, leading to a small allocation. The memset at line 5 then causes a heap-based buffer overflow."
+  },
+  {
+    "cwe": "CWE-190",
+    "cve_id": "CVE-2023-SYNTH-242",
+    "cvss_score": "7.5",
+    "vulnerable_code": "void* grow_connection_pool(void* old_pool, int current_count) {\n int new_count = current_count * 2;\n size_t new_size = new_count * sizeof(struct connection);\n void* new_ptr = realloc(old_pool, new_size);\n if (!new_ptr) return NULL;\n return new_ptr;\n}",
+    "secure_code": "void* grow_connection_pool(void* old_pool, int current_count) {\n if (current_count > INT_MAX / 2) return NULL;\n int new_count = current_count * 2;\n if ((size_t)new_count > SIZE_MAX / sizeof(struct connection)) return NULL;\n size_t new_size = (size_t)new_count * sizeof(struct connection);\n void* new_ptr = realloc(old_pool, new_size);\n if (!new_ptr) return NULL;\n return new_ptr;\n}",
+    "explanation": "Integer overflow at line 2. When current_count is large, multiplying by 2 causes new_count to wrap to a negative value or small positive value, resulting in an undersized realloc at line 4."
+  },
+  {
+    "cwe": "CWE-190",
+    "cve_id": "CVE-2023-SYNTH-243",
+    "cvss_score": "6.8",
+    "vulnerable_code": "size_t align_to_page(size_t size) {\n size_t page_size = 4096;\n size_t aligned_size = (size + page_size - 1) & ~(page_size - 1);\n return aligned_size;\n}",
+    "secure_code": "size_t align_to_page(size_t size) {\n size_t page_size = 4096;\n if (size > SIZE_MAX - (page_size - 1)) return 0;\n size_t aligned_size = (size + page_size - 1) & ~(page_size - 1);\n return aligned_size;\n}",
+    "explanation": "Integer overflow at line 3. If size is very close to SIZE_MAX, adding page_size - 1 causes a wraparound to 0 or a very small number, causing subsequent allocations using this size to be dangerously undersized."
+  },
+  {
+    "cwe": "CWE-190",
+    "cve_id": "CVE-2023-SYNTH-244",
+    "cvss_score": "7.2",
+    "vulnerable_code": "void* alloc_arena_block(int num_items, int item_size, int header_size) {\n int total = (num_items * item_size) + header_size;\n char* block = (char*)malloc(total);\n if (!block) return NULL;\n setup_header(block, header_size);\n return block + header_size;\n}",
+    "secure_code": "void* alloc_arena_block(int num_items, int item_size, int header_size) {\n if (num_items < 0 || item_size < 0 || header_size < 0) return NULL;\n long long check = (long long)num_items * item_size + header_size;\n if (check > INT_MAX) return NULL;\n int total = (int)check;\n char* block = (char*)malloc(total);\n if (!block) return NULL;\n setup_header(block, header_size);\n return block + header_size;\n}",
+    "explanation": "Integer overflow in total at line 2. The combined multiplication and addition can overflow a signed 32-bit integer, leading to a small malloc at line 3 and heap corruption when items are written past the buffer."
+  },
+  {
+    "cwe": "CWE-190",
+    "cve_id": "CVE-2023-SYNTH-245",
+    "cvss_score": "8.2",
+    "vulnerable_code": "struct packet* create_packet_batch(unsigned int count) {\n size_t total_mem = count * sizeof(struct packet);\n struct packet* batch = (struct packet*)malloc(total_mem);\n for (unsigned int i = 0; i < count; i++) {\n init_packet(&batch[i]);\n }\n return batch;\n}",
+    "secure_code": "struct packet* create_packet_batch(unsigned int count) {\n if (count > SIZE_MAX / sizeof(struct packet)) return NULL;\n size_t total_mem = count * sizeof(struct packet);\n struct packet* batch = (struct packet*)malloc(total_mem);\n if (!batch) return NULL;\n for (unsigned int i = 0; i < count; i++) {\n init_packet(&batch[i]);\n }\n return batch;\n}",
+    "explanation": "Integer overflow at line 2. A large count value causes total_mem to wrap. malloc(total_mem) succeeds with a small size, but the loop at line 4 writes 'count' elements, causing a massive heap overflow."
+  },
+  {
+    "cwe": "CWE-190",
+    "cve_id": "CVE-2023-SYNTH-246",
+    "cvss_score": "7.0",
+    "vulnerable_code": "void* pool_alloc(struct pool* p, unsigned short n_chunks) {\n unsigned short total_bytes = n_chunks * p->chunk_size;\n if (total_bytes > p->remaining) return NULL;\n void* ret = p->current_ptr;\n p->current_ptr += total_bytes;\n return ret;\n}",
+    "secure_code": "void* pool_alloc(struct pool* p, unsigned short n_chunks) {\n unsigned int total_bytes = (unsigned int)n_chunks * p->chunk_size;\n if (total_bytes > (unsigned int)p->remaining) return NULL;\n void* ret = p->current_ptr;\n p->current_ptr += total_bytes;\n return ret;\n}",
+    "explanation": "Integer overflow at line 2. total_bytes is an unsigned short (16-bit). If n_chunks * chunk_size > 65535, it wraps, potentially bypassing the check at line 3 and causing pool pointer corruption."
+  },
+  {
+    "cwe": "CWE-190",
+    "cve_id": "CVE-2023-SYNTH-247",
+    "cvss_score": "7.7",
+    "vulnerable_code": "int resize_string_buffer(struct str_buf* b, int extra) {\n int new_cap = b->capacity + extra + 1;\n char* tmp = (char*)realloc(b->data, new_cap);\n if (!tmp) return -1;\n b->data = tmp;\n b->capacity = new_cap;\n return 0;\n}",
+    "secure_code": "int resize_string_buffer(struct str_buf* b, int extra) {\n if (extra < 0 || extra > INT_MAX - b->capacity - 1) return -1;\n int new_cap = b->capacity + extra + 1;\n char* tmp = (char*)realloc(b->data, new_cap);\n if (!tmp) return -1;\n b->data = tmp;\n b->capacity = new_cap;\n return 0;\n}",
+    "explanation": "Integer overflow in new_cap at line 2. If capacity is large and extra is also large, the sum wraps to a small value, causing realloc to shrink the buffer and leading to a heap buffer overflow on next write."
+  },
+  {
+    "cwe": "CWE-190",
+    "cve_id": "CVE-2023-SYNTH-248",
+    "cvss_score": "7.4",
+    "vulnerable_code": "void* alloc_aligned_buffer(size_t size, size_t align) {\n size_t total = size + align;\n void* raw = malloc(total);\n if (!raw) return NULL;\n return (void*)(((uintptr_t)raw + align - 1) & ~(align - 1));\n}",
+    "secure_code": "void* alloc_aligned_buffer(size_t size, size_t align) {\n if (size > SIZE_MAX - align) return NULL;\n size_t total = size + align;\n void* raw = malloc(total);\n if (!raw) return NULL;\n return (void*)(((uintptr_t)raw + align - 1) & ~(align - 1));\n}",
+    "explanation": "Integer overflow at line 2. If size is near SIZE_MAX, size + align wraps around. This results in a small malloc call at line 3, leading to OOB access when the caller uses the 'size' they requested."
+  },
+  {
+    "cwe": "CWE-190",
+    "cve_id": "CVE-2023-SYNTH-249",
+    "cvss_score": "8.5",
+    "vulnerable_code": "void process_image_grid(int rows, int cols) {\n int total_pixels = rows * cols;\n uint32_t* buffer = (uint32_t*)malloc(total_pixels * sizeof(uint32_t));\n for (int i = 0; i < total_pixels; i++) {\n buffer[i] = get_pixel_val();\n }\n free(buffer);\n}",
+    "secure_code": "void process_image_grid(int rows, int cols) {\n if (rows <= 0 || cols <= 0) return;\n if ((size_t)rows > SIZE_MAX / cols / sizeof(uint32_t)) return;\n size_t total_pixels = (size_t)rows * cols;\n uint32_t* buffer = (uint32_t*)malloc(total_pixels * sizeof(uint32_t));\n if (!buffer) return;\n for (size_t i = 0; i < total_pixels; i++) {\n buffer[i] = get_pixel_val();\n }\n free(buffer);\n}",
+    "explanation": "Integer overflow in rows * cols at line 2. Large inputs cause the product to wrap around a 32-bit signed integer. malloc at line 3 receives a small size, and the loop at line 4 overflows the heap."
+  },
+  {
+    "cwe": "CWE-190",
+    "cve_id": "CVE-2023-SYNTH-250",
+    "cvss_score": "6.9",
+    "vulnerable_code": "unsigned int calc_block_size(unsigned char count, unsigned char unit) {\n unsigned char total = count * unit;\n return (unsigned int)total + 16;\n}",
+    "secure_code": "unsigned int calc_block_size(unsigned char count, unsigned char unit) {\n unsigned int total = (unsigned int)count * unit;\n return total + 16;\n}",
+    "explanation": "Integer overflow at line 2. Since total is an unsigned char (8-bit), the product wraps at 255. A result like 260 becomes 4, causing an undersized buffer calculation used in later memory operations."
+  },
+  {
+    "cwe": "CWE-190",
+    "cve_id": "CVE-2023-SYNTH-251",
+    "cvss_score": "7.3",
+    "vulnerable_code": "void* alloc_metadata(int n_entries) {\n int sz = n_entries * 32 + 8;\n if (sz > 4096) return NULL;\n return malloc(sz);\n}",
+    "secure_code": "void* alloc_metadata(int n_entries) {\n if (n_entries < 0 || n_entries > (4096 - 8) / 32) return NULL;\n int sz = n_entries * 32 + 8;\n return malloc(sz);\n}",
+    "explanation": "Integer overflow at line 2. If n_entries is 67108864, n_entries * 32 wraps to 0. Adding 8 makes sz = 8, which is less than 4096, bypassing the check and causing a heap overflow when entries are written."
+  },
+  {
+    "cwe": "CWE-190",
+    "cve_id": "CVE-2023-SYNTH-252",
+    "cvss_score": "8.0",
+    "vulnerable_code": "void* realloc_array(void* p, size_t n, size_t s) {\n size_t bytes = n * s;\n return realloc(p, bytes);\n}",
+    "secure_code": "void* realloc_array(void* p, size_t n, size_t s) {\n if (n > 0 && s > SIZE_MAX / n) return NULL;\n size_t bytes = n * s;\n return realloc(p, bytes);\n}",
+    "explanation": "Integer overflow at line 2. If n * s overflows SIZE_MAX, realloc at line 3 is called with a truncated size, leading to a heap-based buffer overflow in subsequent code that expects the full size."
+  },
+  {
+    "cwe": "CWE-190",
+    "cve_id": "CVE-2023-SYNTH-253",
+    "cvss_score": "7.1",
+    "vulnerable_code": "void handle_request_batch(int count) {\n int buf_size = count * 128;\n char* buffer = (char*)malloc(buf_size);\n for (int i = 0; i < count; i++) {\n process_req(buffer + (i * 128));\n }\n free(buffer);\n}",
+    "secure_code": "void handle_request_batch(int count) {\n if (count < 0 || count > INT_MAX / 128) return;\n size_t buf_size = (size_t)count * 128;\n char* buffer = (char*)malloc(buf_size);\n if (!buffer) return;\n for (int i = 0; i < count; i++) {\n process_req(buffer + (size_t)i * 128);\n }\n free(buffer);\n}",
+    "explanation": "Integer overflow at line 2. Large 'count' values cause a signed integer overflow. If 'count' is 0x02000001, buf_size wraps to 128. malloc(128) is too small for the loop at line 4."
+  },
+  {
+    "cwe": "CWE-190",
+    "cve_id": "CVE-2023-SYNTH-254",
+    "cvss_score": "7.6",
+    "vulnerable_code": "size_t compute_header_plus_payload(size_t h_len, size_t p_len) {\n size_t total = h_len + p_len;\n if (total > 0xFFFF) return 0;\n return total;\n}",
+    "secure_code": "size_t compute_header_plus_payload(size_t h_len, size_t p_len) {\n if (h_len > 0xFFFF || p_len > 0xFFFF - h_len) return 0;\n size_t total = h_len + p_len;\n return total;\n}",
+    "explanation": "Integer overflow at line 2. If h_len is 0xFFFFFFFFFFFFFFFF and p_len is 10, total wraps to 9. This is less than 0xFFFF, so the function returns 9 instead of an error, causing OOB access later."
+  },
+  {
+    "cwe": "CWE-190",
+    "cve_id": "CVE-2023-SYNTH-255",
+    "cvss_score": "6.7",
+    "vulnerable_code": "void* get_scratch_space(short n_pages) {\n short total = n_pages * 4096;\n return malloc(total);\n}",
+    "secure_code": "void* get_scratch_space(short n_pages) {\n if (n_pages <= 0 || n_pages > 8) return NULL;\n int total = (int)n_pages * 4096;\n return malloc((size_t)total);\n}",
+    "explanation": "Integer overflow at line 2. Since total is a signed short (16-bit), n_pages > 8 (e.g., 10 * 4096 = 40960) will overflow (max signed short is 32767), leading to negative values passed to malloc."
+  },
+  {
+    "cwe": "CWE-190",
+    "cve_id": "CVE-2023-SYNTH-256",
+    "cvss_score": "7.4",
+    "vulnerable_code": "int add_to_list(struct list* l, int new_items) {\n int new_total = l->count + new_items;\n if (new_total > l->max) return -1;\n l->items = realloc(l->items, new_total * sizeof(int));\n l->count = new_total;\n return 0;\n}",
+    "secure_code": "int add_to_list(struct list* l, int new_items) {\n if (new_items < 0 || new_items > INT_MAX - l->count) return -1;\n int new_total = l->count + new_items;\n if (new_total > l->max) return -1;\n l->items = realloc(l->items, (size_t)new_total * sizeof(int));\n l->count = new_total;\n return 0;\n}",
+    "explanation": "Integer overflow in new_total at line 2. Adding a large positive new_items to count can cause a wraparound to a small value, bypassing the max check at line 3 and shrinking the buffer via realloc at line 4."
+  },
+  {
+    "cwe": "CWE-190",
+    "cve_id": "CVE-2023-SYNTH-257",
+    "cvss_score": "8.3",
+    "vulnerable_code": "void* map_user_structs(unsigned int n) {\n unsigned int size = n * sizeof(struct user_data) + 16;\n void* p = malloc(size);\n if (p) init_user_data(p, n);\n return p;\n}",
+    "secure_code": "void* map_user_structs(unsigned int n) {\n if (n > (UINT_MAX - 16) / sizeof(struct user_data)) return NULL;\n unsigned int size = n * sizeof(struct user_data) + 16;\n void* p = malloc(size);\n if (p) init_user_data(p, n);\n return p;\n}",
+    "explanation": "Integer overflow at line 2. A large 'n' causes the multiplication and addition to wrap around 32 bits. The resulting small allocation leads to a heap overflow in init_user_data at line 4."
+  },
+  {
+    "cwe": "CWE-190",
+    "cve_id": "CVE-2023-SYNTH-258",
+    "cvss_score": "7.8",
+    "vulnerable_code": "size_t calculate_stride(int width, int bpp) {\n int bits_per_row = width * bpp;\n size_t stride = (bits_per_row + 7) / 8;\n return stride;\n}",
+    "secure_code": "size_t calculate_stride(int width, int bpp) {\n if (width <= 0 || bpp <= 0) return 0;\n if ((size_t)width > SIZE_MAX / bpp) return 0;\n size_t bits_per_row = (size_t)width * bpp;\n size_t stride = (bits_per_row + 7) / 8;\n return stride;\n}",
+    "explanation": "Integer overflow at line 2. The multiplication width * bpp occurs as a 32-bit signed integer. Large values wrap around, leading to an incorrect stride calculation used for buffer allocation and indexing."
+  },
+  {
+    "cwe": "CWE-190",
+    "cve_id": "CVE-2023-SYNTH-259",
+    "cvss_score": "7.5",
+    "vulnerable_code": "void* alloc_work_queue(unsigned short q_len) {\n unsigned short total_size = q_len * sizeof(void*) + 2;\n void* q = malloc(total_size);\n return q;\n}",
+    "secure_code": "void* alloc_work_queue(unsigned short q_len) {\n unsigned int total_size = (unsigned int)q_len * sizeof(void*) + 2;\n if (total_size > 0xFFFF) return NULL;\n void* q = malloc(total_size);\n return q;\n}",
+    "explanation": "Integer overflow in total_size at line 2. If q_len * sizeof(void*) + 2 exceeds 65535, it wraps as an unsigned short, resulting in an undersized allocation for the queue pointers."
+  },
+  {
+    "cwe": "CWE-190",
+    "cve_id": "CVE-2023-SYNTH-260",
+    "cvss_score": "8.4",
+    "vulnerable_code": "char* dup_and_pad(const char* s, int pad) {\n int new_len = strlen(s) + pad;\n char* out = malloc(new_len + 1);\n strcpy(out, s);\n memset(out + strlen(s), ' ', pad);\n out[new_len] = '\\0';\n return out;\n}",
+    "secure_code": "char* dup_and_pad(const char* s, int pad) {\n size_t s_len = strlen(s);\n if (pad < 0 || s_len > INT_MAX - pad - 1) return NULL;\n int new_len = (int)s_len + pad;\n char* out = malloc((size_t)new_len + 1);\n if (!out) return NULL;\n strcpy(out, s);\n memset(out + s_len, ' ', (size_t)pad);\n out[new_len] = '\\0';\n return out;\n}",
+    "explanation": "Integer overflow at line 2. If strlen(s) + pad overflows a signed integer, new_len becomes a small or negative value. malloc(new_len + 1) then fails to provide enough space for the memset at line 5."
+  }
+]

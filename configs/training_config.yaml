@@ -1,0 +1,62 @@
+# General Training & Evaluation Configuration
+
+dataset:
+  name: "Big-Vul"
+  source_url: "https://drive.google.com/uc?id=1-0VhnHBp9IGh90s2wCNjeCMuy2ws-n2H"
+  raw_path: "./data/raw/MSR_data_cleaned.csv"
+  processed_path: "./data/processed"
+  # Stratified split by CWE category to ensure all vulnerability types are represented
+  train_ratio: 0.80
+  val_ratio: 0.10
+  test_ratio: 0.10
+  random_seed: 42
+  # Minimum samples per CWE to include in dataset (avoids extremely rare classes)
+  min_cwe_samples: 10
+  # Max token length for code snippets (longer ones are chunked)
+  max_code_length: 1500
+
+prompt:
+  # Instruction template for the fine-tuning task
+  system_prompt: |
+    You are an expert security code auditor. Your task is to:
+    1. Identify security vulnerabilities in the provided code snippet.
+    2. Classify the vulnerability type using CWE (Common Weakness Enumeration).
+    3. Rewrite the code into a secure version following the corporate style guide.
+    4. Explain the vulnerability and the fix clearly.
+
+  # Corporate style guide rules injected into the prompt
+  style_guide_rules:
+    - "Always validate and sanitize all external inputs before use."
+    - "Use parameterized queries or prepared statements for all database operations."
+    - "Never store sensitive data (passwords, tokens) in plaintext."
+    - "Apply the principle of least privilege for all resource access."
+    - "Use memory-safe functions; avoid strcpy, sprintf, gets."
+    - "Check all return values from security-critical functions."
+    - "Use HTTPS/TLS for all network communications."
+    - "Implement proper error handling without leaking internal details."
+
+baseline:
+  models:
+    - name: "zero_shot"
+      model_id: "codellama/CodeLlama-7b-hf"
+      description: "Base model, no fine-tuning"
+    - name: "few_shot"
+      model_id: "codellama/CodeLlama-7b-hf"
+      description: "Base model with 3-shot examples in prompt"
+    - name: "finetuned_lora"
+      model_id: "./outputs/lora_adapter"
+      description: "QLoRA fine-tuned on Big-Vul"
+    - name: "finetuned_lora_rag"
+      model_id: "./outputs/lora_adapter"
+      description: "QLoRA fine-tuned + RAG retrieval"
+
+evaluation:
+  output_dir: "./results"
+  metrics:
+    - "bleu"
+    - "rouge"
+    - "codebleu"
+    - "f1_vulnerability_detection"
+    - "cwe_classification_accuracy"
+    - "hallucination_rate"
+  num_eval_samples: 500               # Subset for expensive LLM-based eval

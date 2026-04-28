@@ -1,0 +1,82 @@
+[
+  {
+    "cwe": "CWE-416",
+    "cve_id": "CVE-2023-SYNTH-301",
+    "cvss_score": "8.6",
+    "vulnerable_code": "void parse_xml_element(xml_parser_t *parser, const char *buf, size_t len) {\n    xml_node_t *node = xml_node_alloc();\n    if (!node) return;\n\n    if (parse_attributes(node, buf, len) < 0) {\n        xml_node_free(node);\n    }\n\n    if (parser->depth > MAX_DEPTH) {\n        log_warn(\"Max depth exceeded at node: %s\", node->tag);\n        return;\n    }\n\n    push_node(parser->stack, node);\n}",
+    "secure_code": "void parse_xml_element(xml_parser_t *parser, const char *buf, size_t len) {\n    xml_node_t *node = xml_node_alloc();\n    if (!node) return;\n\n    if (parse_attributes(node, buf, len) < 0) {\n        xml_node_free(node);\n        return;\n    }\n\n    if (parser->depth > MAX_DEPTH) {\n        log_warn(\"Max depth exceeded\");\n        xml_node_free(node);\n        return;\n    }\n\n    push_node(parser->stack, node);\n}",
+    "explanation": "xml_node_free(node) is called on attribute parse failure at line 6, but execution continues. At line 10, node->tag is accessed in log_warn after the node has been freed. An attacker supplying malformed attributes triggers the UAF."
+  },
+  {
+    "cwe": "CWE-416",
+    "cve_id": "CVE-2023-SYNTH-302",
+    "cvss_score": "8.2",
+    "vulnerable_code": "token_t *json_next_token(json_lexer_t *lex) {\n    token_t *tok = token_alloc(lex->pool);\n    if (!tok) return NULL;\n\n    int type = classify_char(lex->cur);\n    if (type == TOK_INVALID) {\n        token_free(tok);\n    }\n\n    tok->type = type;\n    tok->pos  = lex->pos;\n    advance(lex);\n    return tok;\n}",
+    "secure_code": "token_t *json_next_token(json_lexer_t *lex) {\n    token_t *tok = token_alloc(lex->pool);\n    if (!tok) return NULL;\n\n    int type = classify_char(lex->cur);\n    if (type == TOK_INVALID) {\n        token_free(tok);\n        return NULL;\n    }\n\n    tok->type = type;\n    tok->pos  = lex->pos;\n    advance(lex);\n    return tok;\n}",
+    "explanation": "token_free(tok) is called when an invalid character is found, but the function does not return. Lines 9-10 then write into tok->type and tok->pos on the freed memory, causing a use-after-free that an attacker can exploit with crafted JSON input."
+  },
+  {
+    "cwe": "CWE-416",
+    "cve_id": "CVE-2023-SYNTH-303",
+    "cvss_score": "7.8",
+    "vulnerable_code": "int parse_http_header(http_request_t *req, char *raw, size_t raw_len) {\n    header_t *hdr = header_alloc();\n    if (!hdr) return -1;\n\n    if (raw_len > MAX_HEADER_SIZE) {\n        header_free(hdr);\n    }\n\n    strncpy(hdr->name,  raw,       MAX_NAME_LEN);\n    strncpy(hdr->value, raw + 64,  MAX_VAL_LEN);\n    list_append(&req->headers, hdr);\n    return 0;\n}",
+    "secure_code": "int parse_http_header(http_request_t *req, char *raw, size_t raw_len) {\n    header_t *hdr = header_alloc();\n    if (!hdr) return -1;\n\n    if (raw_len > MAX_HEADER_SIZE) {\n        header_free(hdr);\n        return -1;\n    }\n\n    strncpy(hdr->name,  raw,       MAX_NAME_LEN);\n    strncpy(hdr->value, raw + 64,  MAX_VAL_LEN);\n    list_append(&req->headers, hdr);\n    return 0;\n}",
+    "explanation": "header_free(hdr) is called when the raw header exceeds MAX_HEADER_SIZE, but execution falls through. strncpy then writes into hdr->name and hdr->value on freed memory. An oversized HTTP header triggers this UAF."
+  },
+  {
+    "cwe": "CWE-416",
+    "cve_id": "CVE-2023-SYNTH-304",
+    "cvss_score": "8.0",
+    "vulnerable_code": "css_rule_t *parse_css_rule(css_parser_t *p) {\n    css_rule_t *rule = css_rule_alloc();\n    if (!rule) return NULL;\n\n    if (!expect_token(p, TOK_LBRACE)) {\n        css_rule_free(rule);\n    }\n\n    while (!peek_token(p, TOK_RBRACE)) {\n        css_decl_t *decl = parse_declaration(p);\n        list_append(&rule->decls, decl);\n    }\n    return rule;\n}",
+    "secure_code": "css_rule_t *parse_css_rule(css_parser_t *p) {\n    css_rule_t *rule = css_rule_alloc();\n    if (!rule) return NULL;\n\n    if (!expect_token(p, TOK_LBRACE)) {\n        css_rule_free(rule);\n        return NULL;\n    }\n\n    while (!peek_token(p, TOK_RBRACE)) {\n        css_decl_t *decl = parse_declaration(p);\n        list_append(&rule->decls, decl);\n    }\n    return rule;\n}",
+    "explanation": "css_rule_free(rule) is called when the opening brace is missing, but the while loop continues executing. list_append accesses rule->decls on the freed rule object. Malformed CSS without a '{' triggers this UAF."
+  },
+  {
+    "cwe": "CWE-416",
+    "cve_id": "CVE-2023-SYNTH-305",
+    "cvss_score": "7.5",
+    "vulnerable_code": "int parse_elf_section(elf_ctx_t *ctx, uint8_t *data, size_t sz) {\n    elf_section_t *sec = elf_section_alloc();\n    if (!sec) return -1;\n\n    if (sz < sizeof(Elf64_Shdr)) {\n        elf_section_free(sec);\n    }\n\n    memcpy(&sec->hdr, data, sizeof(Elf64_Shdr));\n    sec->data = data + sizeof(Elf64_Shdr);\n    list_append(&ctx->sections, sec);\n    return 0;\n}",
+    "secure_code": "int parse_elf_section(elf_ctx_t *ctx, uint8_t *data, size_t sz) {\n    elf_section_t *sec = elf_section_alloc();\n    if (!sec) return -1;\n\n    if (sz < sizeof(Elf64_Shdr)) {\n        elf_section_free(sec);\n        return -1;\n    }\n\n    memcpy(&sec->hdr, data, sizeof(Elf64_Shdr));\n    sec->data = data + sizeof(Elf64_Shdr);\n    list_append(&ctx->sections, sec);\n    return 0;\n}",
+    "explanation": "elf_section_free(sec) is called when the data buffer is too small, but execution continues. memcpy then writes into sec->hdr on freed memory. A truncated ELF binary triggers this UAF during section parsing."
+  },
+  {
+    "cwe": "CWE-416",
+    "cve_id": "CVE-2023-SYNTH-306",
+    "cvss_score": "8.4",
+    "vulnerable_code": "proto_msg_t *decode_protobuf_msg(pb_decoder_t *dec, uint8_t *buf, size_t len) {\n    proto_msg_t *msg = proto_msg_alloc();\n    if (!msg) return NULL;\n\n    if (len == 0 || buf[0] != PB_MAGIC) {\n        proto_msg_free(msg);\n    }\n\n    msg->tag    = read_varint(dec);\n    msg->wire   = buf[0] & 0x07;\n    msg->length = len;\n    return msg;\n}",
+    "secure_code": "proto_msg_t *decode_protobuf_msg(pb_decoder_t *dec, uint8_t *buf, size_t len) {\n    proto_msg_t *msg = proto_msg_alloc();\n    if (!msg) return NULL;\n\n    if (len == 0 || buf[0] != PB_MAGIC) {\n        proto_msg_free(msg);\n        return NULL;\n    }\n\n    msg->tag    = read_varint(dec);\n    msg->wire   = buf[0] & 0x07;\n    msg->length = len;\n    return msg;\n}",
+    "explanation": "proto_msg_free(msg) is called on invalid magic byte, but the function continues. msg->tag, msg->wire, and msg->length are then written on freed memory. An attacker sending a malformed protobuf message triggers this UAF."
+  },
+  {
+    "cwe": "CWE-416",
+    "cve_id": "CVE-2023-SYNTH-307",
+    "cvss_score": "7.9",
+    "vulnerable_code": "int parse_dns_record(dns_ctx_t *ctx, uint8_t *pkt, size_t pkt_len) {\n    dns_rr_t *rr = dns_rr_alloc();\n    if (!rr) return -1;\n\n    if (pkt_len < DNS_RR_MIN_LEN) {\n        dns_rr_free(rr);\n    }\n\n    rr->type  = ntohs(*(uint16_t *)(pkt + 0));\n    rr->class = ntohs(*(uint16_t *)(pkt + 2));\n    rr->ttl   = ntohl(*(uint32_t *)(pkt + 4));\n    list_append(&ctx->records, rr);\n    return 0;\n}",
+    "secure_code": "int parse_dns_record(dns_ctx_t *ctx, uint8_t *pkt, size_t pkt_len) {\n    dns_rr_t *rr = dns_rr_alloc();\n    if (!rr) return -1;\n\n    if (pkt_len < DNS_RR_MIN_LEN) {\n        dns_rr_free(rr);\n        return -1;\n    }\n\n    rr->type  = ntohs(*(uint16_t *)(pkt + 0));\n    rr->class = ntohs(*(uint16_t *)(pkt + 2));\n    rr->ttl   = ntohl(*(uint32_t *)(pkt + 4));\n    list_append(&ctx->records, rr);\n    return 0;\n}",
+    "explanation": "dns_rr_free(rr) is called when the packet is too short, but execution continues. rr->type, rr->class, and rr->ttl are then written on freed memory. A truncated DNS response packet triggers this UAF."
+  },
+  {
+    "cwe": "CWE-416",
+    "cve_id": "CVE-2023-SYNTH-308",
+    "cvss_score": "8.1",
+    "vulnerable_code": "yaml_node_t *parse_yaml_mapping(yaml_parser_t *p) {\n    yaml_node_t *node = yaml_node_alloc(YAML_MAPPING);\n    if (!node) return NULL;\n\n    if (p->indent < 0) {\n        yaml_node_free(node);\n    }\n\n    node->indent = p->indent;\n    node->line   = p->line;\n    while (yaml_has_more_pairs(p)) {\n        yaml_pair_t *pair = parse_yaml_pair(p);\n        list_append(&node->pairs, pair);\n    }\n    return node;\n}",
+    "secure_code": "yaml_node_t *parse_yaml_mapping(yaml_parser_t *p) {\n    yaml_node_t *node = yaml_node_alloc(YAML_MAPPING);\n    if (!node) return NULL;\n\n    if (p->indent < 0) {\n        yaml_node_free(node);\n        return NULL;\n    }\n\n    node->indent = p->indent;\n    node->line   = p->line;\n    while (yaml_has_more_pairs(p)) {\n        yaml_pair_t *pair = parse_yaml_pair(p);\n        list_append(&node->pairs, pair);\n    }\n    return node;\n}",
+    "explanation": "yaml_node_free(node) is called on negative indent, but execution continues. node->indent and node->line are then written on freed memory. Malformed YAML with invalid indentation triggers this UAF."
+  },
+  {
+    "cwe": "CWE-416",
+    "cve_id": "CVE-2023-SYNTH-309",
+    "cvss_score": "7.7",
+    "vulnerable_code": "ast_node_t *parse_binary_expr(parser_t *p, ast_node_t *left) {\n    ast_node_t *node = ast_node_alloc(AST_BINARY);\n    if (!node) return NULL;\n\n    token_t *op = consume_token(p);\n    if (!op || op->type == TOK_EOF) {\n        ast_node_free(node);\n    }\n\n    node->op    = op->type;\n    node->left  = left;\n    node->right = parse_unary(p);\n    return node;\n}",
+    "secure_code": "ast_node_t *parse_binary_expr(parser_t *p, ast_node_t *left) {\n    ast_node_t *node = ast_node_alloc(AST_BINARY);\n    if (!node) return NULL;\n\n    token_t *op = consume_token(p);\n    if (!op || op->type == TOK_EOF) {\n        ast_node_free(node);\n        return NULL;\n    }\n\n    node->op    = op->type;\n    node->left  = left;\n    node->right = parse_unary(p);\n    return node;\n}",
+    "explanation": "ast_node_free(node) is called when the operator token is missing or EOF, but execution continues. node->op, node->left, and node->right are then written on freed memory. An incomplete expression in source code triggers this UAF."
+  },
+  {
+    "cwe": "CWE-416",
+    "cve_id": "CVE-2023-SYNTH-310",
+    "cvss_score": "8.3",
+    "vulnerable_code": "tls_record_t *parse_tls_record(tls_ctx_t *ctx, uint8_t *buf, size_t len) {\n    tls_record_t *rec = tls_record_alloc();\n    if (!rec) return NULL;\n\n    if (buf[0] != TLS_CONTENT_HANDSHAKE && buf[0] != TLS_CONTENT_DATA) {\n        tls_record_free(rec);\n    }\n\n    rec->content_type = buf[0];\n    rec->version      = ntohs(*(uint16_t *)(buf + 1));\n    rec->length       = ntohs(*(uint16_t *)(buf + 3));\n    return rec;\n}",
+    "secure_code": "tls_record_t *parse_tls_record(tls_ctx_t *ctx, uint8_t *buf, size_t len) {\n    tls_record_t *rec = tls_record_alloc();\n    if (!rec) return NULL;\n\n    if (buf[0] != TLS_CONTENT_HANDSHAKE && buf[0] != TLS_CONTENT_DATA) {\n        tls_record_free(rec);\n        return NULL;\n    }\n\n    rec->content_type = buf[0];\n    rec->version      = ntohs(*(uint16_t *)(buf + 1));\n    rec->length       = ntohs(*(uint16_t *)(buf + 3));\n    return rec;\n}",
+    "explanation": "tls_record_free(rec) is called on an unknown content type, but execution continues. rec->content_type, rec->version, and rec->length are then written on freed memory. A malformed TLS record with an invalid content type triggers this UAF."
+  }
+]

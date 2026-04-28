@@ -1,0 +1,63 @@
+{
+  "finetuned_v3": {
+    "model": "v3 Fine-tuned (QLoRA DeepSeek-6.7B + Synthetic)",
+    "bleu4": 5.82,
+    "rougeL": 0.267,
+    "cwe_accuracy": 0.17,
+    "unknown_count": 52,
+    "correct": 17,
+    "total": 100,
+    "per_cwe": {
+      "CWE-119": {
+        "correct": 0,
+        "total": 27,
+        "accuracy": 0.0
+      },
+      "CWE-20": {
+        "correct": 10,
+        "total": 25,
+        "accuracy": 0.4
+      },
+      "CWE-399": {
+        "correct": 2,
+        "total": 14,
+        "accuracy": 0.143
+      },
+      "CWE-125": {
+        "correct": 0,
+        "total": 10,
+        "accuracy": 0.0
+      },
+      "CWE-200": {
+        "correct": 0,
+        "total": 8,
+        "accuracy": 0.0
+      },
+      "CWE-264": {
+        "correct": 2,
+        "total": 5,
+        "accuracy": 0.4
+      },
+      "CWE-190": {
+        "correct": 2,
+        "total": 4,
+        "accuracy": 0.5
+      },
+      "CWE-416": {
+        "correct": 1,
+        "total": 4,
+        "accuracy": 0.25
+      },
+      "CWE-189": {
+        "correct": 0,
+        "total": 2,
+        "accuracy": 0.0
+      },
+      "CWE-362": {
+        "correct": 0,
+        "total": 1,
+        "accuracy": 0.0
+      }
+    }
+  }
+}

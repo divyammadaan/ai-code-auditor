@@ -1,0 +1,10 @@
+[
+  {
+    "cwe": "CWE-190",
+    "cve_id": "CVE-2023-SYNTH-261",
+    "cvss_score": "7.8",
+    "vulnerable_code": "int process_zip_entries(unsigned short entry_count) {\n size_t total_size = entry_count * sizeof(struct ZipEntry);\n struct ZipEntry* entries = (struct ZipEntry*)malloc(total_size);\n if (!entries) return -1;\n for (int i = 0; i < entry_count; i++) {\n read_zip_metadata(&entries[i]);\n }\n parse_directory(entries, entry_count);\n free(entries);\n return 0;\n}",
+    "secure_code": "int process_zip_entries(unsigned short entry_count) {\n if (entry_count > 0 && sizeof(struct ZipEntry) > SIZE_MAX / entry_count) return -1;\n size_t total_size = (size_t)entry_count * sizeof(struct ZipEntry);\n struct ZipEntry* entries = (struct ZipEntry*)malloc(total_size);\n if (!entries) return -1;\n for (int i = 0; i < entry_count; i++) {\n read_zip_metadata(&entries[i]);\n }\n parse_directory(entries, entry_count);\n free(entries);\n return 0;\n}",
+    "explanation": "Integer overflow in total_size at line 2. On 32-bit systems, if entry_count is sufficiently large, entry_count * sizeof(struct ZipEntry) wraps around, resulting in an undersized buffer allocation at line 3. The loop at line 5 then causes a heap buffer overflow when populating the array."
+  }
+]

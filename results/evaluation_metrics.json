@@ -1,0 +1,18 @@
+{
+  "baseline": {
+    "model": "Baseline (Zero-shot CodeLlama-7B)",
+    "bleu4": 1.65,
+    "rougeL": 0.163,
+    "cwe_accuracy": 0.0,
+    "halluc_rate": 0.01,
+    "n_samples": 100
+  },
+  "finetuned": {
+    "model": "Fine-tuned (QLoRA CodeLlama-7B)",
+    "bleu4": 2.5,
+    "rougeL": 0.272,
+    "cwe_accuracy": 0.22,
+    "halluc_rate": 0.0,
+    "n_samples": 100
+  }
+}

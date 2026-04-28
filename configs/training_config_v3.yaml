@@ -1,0 +1,79 @@
+# v3 Training Configuration - With Synthetic Data and Class Balancing
+
+dataset:
+  name: "Big-Vul + Synthetic (v3)"
+  source_url: "https://drive.google.com/uc?id=1-0VhnHBp9IGh90s2wCNjeCMuy2ws-n2H"
+  raw_path: "./data/raw/MSR_data_cleaned.csv"
+  processed_path: "./data/processed_v3"  # ← Updated to v3
+  # Stratified split by CWE category to ensure all vulnerability types are represented
+  train_ratio: 0.80
+  val_ratio: 0.10
+  test_ratio: 0.10
+  random_seed: 42
+  # Minimum samples per CWE to include in dataset (avoids extremely rare classes)
+  min_cwe_samples: 10
+  # Max token length for code snippets (longer ones are chunked)
+  max_code_length: 1500
+  
+  # v3 specific settings
+  synthetic_data: true
+  class_balancing: true
+  balance_min: 200  # Minimum samples per class
+  balance_max: 300  # Maximum samples per class
+
+prompt:
+  # Instruction template for the fine-tuning task
+  system_prompt: |
+    You are an expert security code auditor. Your task is to:
+    1. Identify security vulnerabilities in the provided code snippet.
+    2. Classify the vulnerability type using CWE (Common Weakness Enumeration).
+    3. Rewrite the code into a secure version following the corporate style guide.
+    4. Explain the vulnerability and the fix clearly.
+
+  # Corporate style guide rules injected into the prompt
+  style_guide_rules:
+    - "Always validate and sanitize all external inputs before use."
+    - "Use parameterized queries or prepared statements for all database operations."
+    - "Never store sensitive data (passwords, tokens) in plaintext."
+    - "Apply the principle of least privilege for all resource access."
+    - "Use memory-safe functions; avoid strcpy, sprintf, gets."
+    - "Check all return values from security-critical functions."
+    - "Use HTTPS/TLS for all network communications."
+    - "Implement proper error handling without leaking internal details."
+
+baseline:
+  models:
+    - name: "zero_shot"
+      model_id: "codellama/CodeLlama-7b-hf"
+      description: "Base model, no fine-tuning"
+    - name: "few_shot"
+      model_id: "codellama/CodeLlama-7b-hf"
+      description: "Base model with 3-shot examples in prompt"
+    - name: "finetuned_lora_v2"
+      model_id: "./models/lora_adapter_v2"
+      description: "QLoRA fine-tuned on Big-Vul (v2)"
+    - name: "finetuned_lora_v3"
+      model_id: "./models/lora_adapter_v3"
+      description: "QLoRA fine-tuned on Big-Vul + Synthetic (v3)"
+    - name: "finetuned_lora_v3_rag"
+      model_id: "./models/lora_adapter_v3"
+      description: "QLoRA fine-tuned v3 + RAG retrieval"
+
+evaluation:
+  output_dir: "./results"
+  metrics:
+    - "bleu"
+    - "rouge"
+    - "codebleu"
+    - "f1_vulnerability_detection"
+    - "cwe_classification_accuracy"
+    - "hallucination_rate"
+    - "per_cwe_accuracy"  # ← Added for v3 analysis
+    - "synthetic_vs_real_performance"  # ← Added for v3 analysis
+  num_eval_samples: 500               # Subset for expensive LLM-based eval
+  
+  # v3 specific evaluation
+  compare_with_v2: true
+  test_on_synthetic: true  # Test on held-out synthetic data
+  domain_analysis: true    # Analyze performance by domain (crypto, kernel, etc.)
+

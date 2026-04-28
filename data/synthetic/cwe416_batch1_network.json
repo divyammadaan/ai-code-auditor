@@ -1,0 +1,162 @@
+[
+  {
+    "cwe": "CWE-416",
+    "cve_id": "CVE-2023-SYNTH-001",
+    "cvss_score": "8.8",
+    "vulnerable_code": "void handle_http_request(http_conn_t *conn) {\n    request_t *req = parse_headers(conn);\n    if (!req) return;\n\n    if (req->keep_alive) {\n        add_to_keepalive_pool(conn);\n    }\n\n    if (process_request_body(req) != 0) {\n        log_error(\"Failed to process body for %s\", req->uri);\n        free_request(req);\n    }\n\n    // Audit logging after processing\n    send_response(conn, 200, \"OK\");\n    update_stats(req->uri, req->method);\n}",
+    "secure_code": "void handle_http_request(http_conn_t *conn) {\n    request_t *req = parse_headers(conn);\n    if (!req) return;\n\n    if (req->keep_alive) {\n        add_to_keepalive_pool(conn);\n    }\n\n    if (process_request_body(req) != 0) {\n        log_error(\"Failed to process body for %s\", req->uri);\n        free_request(req);\n        return;\n    }\n\n    // Audit logging after processing\n    send_response(conn, 200, \"OK\");\n    update_stats(req->uri, req->method);\n}",
+    "explanation": "In line 12, free_request(req) is called if body processing fails. However, the function continues to execute. In line 17, update_stats(req->uri, req->method) accesses fields from the freed 'req' pointer. An attacker can trigger a body processing error to cause a Use-After-Free."
+  },
+  {
+    "cwe": "CWE-416",
+    "cve_id": "CVE-2023-SYNTH-002",
+    "cvss_score": "7.5",
+    "vulnerable_code": "int ws_process_frame(ws_session_t *session, frame_t *frame) {\n    if (frame->opcode == WS_OP_CLOSE) {\n        notify_app_close(session->user_data);\n        destroy_ws_session(session);\n    }\n\n    if (session->state == WS_STATE_OPEN) {\n        return relay_payload(session, frame->payload);\n    }\n\n    return -1;\n}",
+    "secure_code": "int ws_process_frame(ws_session_t *session, frame_t *frame) {\n    if (frame->opcode == WS_OP_CLOSE) {\n        notify_app_close(session->user_data);\n        destroy_ws_session(session);\n        return 0;\n    }\n\n    if (session->state == WS_STATE_OPEN) {\n        return relay_payload(session, frame->payload);\n    }\n\n    return -1;\n}",
+    "explanation": "When a CLOSE opcode is received, destroy_ws_session(session) frees the session object at line 5. The code then checks session->state at line 8, resulting in a Use-After-Free of the 'session' pointer."
+  },
+  {
+    "cwe": "CWE-416",
+    "cve_id": "CVE-2023-SYNTH-003",
+    "cvss_score": "9.1",
+    "vulnerable_code": "void cleanup_connection_pool(pool_t *pool) {\n    connection_t *curr = pool->head;\n    while (curr) {\n        if (curr->status == CONN_IDLE) {\n            if (curr->prev) curr->prev->next = curr->next;\n            if (curr->next) curr->next->prev = curr->prev;\n            if (pool->head == curr) pool->head = curr->next;\n\n            close(curr->fd);\n            free(curr);\n        }\n        curr = curr->next;\n    }\n}",
+    "secure_code": "void cleanup_connection_pool(pool_t *pool) {\n    connection_t *curr = pool->head;\n    while (curr) {\n        connection_t *next = curr->next;\n        if (curr->status == CONN_IDLE) {\n            if (curr->prev) curr->prev->next = curr->next;\n            if (curr->next) curr->next->prev = curr->prev;\n            if (pool->head == curr) pool->head = curr->next;\n\n            close(curr->fd);\n            free(curr);\n        }\n        curr = next;\n    }\n}",
+    "explanation": "In line 10, 'curr' is freed. In line 12, 'curr = curr->next' attempts to access the 'next' member of the already freed 'curr' structure. This allows an attacker who can force idle connections to crash the daemon or potentially execute code."
+  },
+  {
+    "cwe": "CWE-416",
+    "cve_id": "CVE-2023-SYNTH-004",
+    "cvss_score": "8.2",
+    "vulnerable_code": "void handle_session_timeout(session_manager_t *mgr) {\n    time_t now = time(NULL);\n    for (int i = 0; i < mgr->size; i++) {\n        session_t *s = mgr->sessions[i];\n        if (s && s->expiry < now) {\n            invalidate_session_cache(s->sid);\n            free_session(s);\n            log_debug(\"Session %s expired\", s->sid);\n        }\n    }\n}",
+    "secure_code": "void handle_session_timeout(session_manager_t *mgr) {\n    time_t now = time(NULL);\n    for (int i = 0; i < mgr->size; i++) {\n        session_t *s = mgr->sessions[i];\n        if (s && s->expiry < now) {\n            char log_id[32];\n            strncpy(log_id, s->sid, 31);\n            invalidate_session_cache(s->sid);\n            free_session(s);\n            mgr->sessions[i] = NULL;\n            log_debug(\"Session %s expired\", log_id);\n        }\n    }\n}",
+    "explanation": "In line 7, free_session(s) deallocates the session object. Line 8 then attempts to access s->sid for a debug log message. An attacker manipulating session timing could trigger this UAF."
+  },
+  {
+    "cwe": "CWE-416",
+    "cve_id": "CVE-2023-SYNTH-005",
+    "cvss_score": "7.8",
+    "vulnerable_code": "int process_tls_teardown(tls_context_t *ctx, ssl_obj_t *ssl) {\n    char *peer_ip = strdup(ssl->remote_ip);\n    if (terminate_ssl_handshake(ssl) != 0) {\n        ssl_cleanup(ssl);\n    }\n\n    if (ssl->error_code == SSL_ERR_WANT_READ) {\n        return EAGAIN;\n    }\n\n    free(peer_ip);\n    return 0;\n}",
+    "secure_code": "int process_tls_teardown(tls_context_t *ctx, ssl_obj_t *ssl) {\n    char *peer_ip = strdup(ssl->remote_ip);\n    if (terminate_ssl_handshake(ssl) != 0) {\n        ssl_cleanup(ssl);\n        free(peer_ip);\n        return -1;\n    }\n\n    if (ssl->error_code == SSL_ERR_WANT_READ) {\n        free(peer_ip);\n        return EAGAIN;\n    }\n\n    free(peer_ip);\n    return 0;\n}",
+    "explanation": "If terminate_ssl_handshake fails, ssl_cleanup(ssl) is called at line 4, which frees 'ssl'. Line 7 then accesses ssl->error_code. A malicious peer could send a malformed teardown to trigger the failure path."
+  },
+  {
+    "cwe": "CWE-416",
+    "cve_id": "CVE-2023-SYNTH-006",
+    "cvss_score": "8.5",
+    "vulnerable_code": "void dispatch_callback(event_t *ev) {\n    callback_entry_t *cb = (callback_entry_t *)ev->data;\n    if (cb->one_shot) {\n        unregister_event(ev);\n        free(cb);\n    }\n\n    if (cb->priority > HIGH_PRIORITY) {\n        execute_fast_path(cb);\n    } else {\n        queue_work(cb);\n    }\n}",
+    "secure_code": "void dispatch_callback(event_t *ev) {\n    callback_entry_t *cb = (callback_entry_t *)ev->data;\n    bool is_one_shot = cb->one_shot;\n\n    if (cb->priority > HIGH_PRIORITY) {\n        execute_fast_path(cb);\n    } else {\n        queue_work(cb);\n    }\n\n    if (is_one_shot) {\n        unregister_event(ev);\n        free(cb);\n    }\n}",
+    "explanation": "If cb->one_shot is true, 'cb' is freed at line 5. The code continues to access cb->priority at line 8 and passes the freed 'cb' to other functions in lines 9 or 11."
+  },
+  {
+    "cwe": "CWE-416",
+    "cve_id": "CVE-2023-SYNTH-007",
+    "cvss_score": "7.0",
+    "vulnerable_code": "void purge_stale_cache(cache_t *cache) {\n    node_t *n = cache->root;\n    while (n) {\n        if (is_expired(n->timestamp)) {\n            remove_from_tree(cache, n);\n            release_node_resources(n);\n        }\n        n = get_next_inorder(n);\n    }\n}",
+    "secure_code": "void purge_stale_cache(cache_t *cache) {\n    node_t *n = cache->root;\n    while (n) {\n        node_t *next = get_next_inorder(n);\n        if (is_expired(n->timestamp)) {\n            remove_from_tree(cache, n);\n            release_node_resources(n);\n        }\n        n = next;\n    }\n}",
+    "explanation": "In line 6, release_node_resources(n) frees the node 'n'. Line 8 then calls get_next_inorder(n), which dereferences the freed node to find its successor in the tree."
+  },
+  {
+    "cwe": "CWE-416",
+    "cve_id": "CVE-2023-SYNTH-008",
+    "cvss_score": "9.8",
+    "vulnerable_code": "int handle_websocket_upgrade(http_req_t *req) {\n    ws_ctx_t *ws = init_ws_context(req);\n    if (validate_ws_handshake(req) != 0) {\n        delete_ws_context(ws);\n    }\n\n    if (ws && ws->is_valid) {\n        return start_ws_loop(ws);\n    }\n\n    return -1;\n}",
+    "secure_code": "int handle_websocket_upgrade(http_req_t *req) {\n    ws_ctx_t *ws = init_ws_context(req);\n    if (validate_ws_handshake(req) != 0) {\n        delete_ws_context(ws);\n        return -1;\n    }\n\n    if (ws && ws->is_valid) {\n        return start_ws_loop(ws);\n    }\n\n    return -1;\n}",
+    "explanation": "If the handshake fails, delete_ws_context(ws) is called at line 4, freeing 'ws'. At line 7, the code checks ws->is_valid, accessing freed memory."
+  },
+  {
+    "cwe": "CWE-416",
+    "cve_id": "CVE-2023-SYNTH-009",
+    "cvss_score": "8.4",
+    "vulnerable_code": "void transfer_buffer(buffer_t *src, stream_t *dest) {\n    size_t written = write_to_stream(dest, src->data, src->len);\n    if (written == src->len) {\n        destroy_buffer(src);\n    }\n\n    if (src->on_release_cb) {\n        src->on_release_cb(src->context);\n    }\n}",
+    "secure_code": "void transfer_buffer(buffer_t *src, stream_t *dest) {\n    void (*cb)(void *) = src->on_release_cb;\n    void *ctx = src->context;\n    size_t written = write_to_stream(dest, src->data, src->len);\n    if (written == src->len) {\n        destroy_buffer(src);\n    }\n\n    if (cb) {\n        cb(ctx);\n    }\n}",
+    "explanation": "If the full buffer is written, destroy_buffer(src) frees 'src' at line 4. Line 7 then attempts to read src->on_release_cb and line 8 reads src->context from the freed structure."
+  },
+  {
+    "cwe": "CWE-416",
+    "cve_id": "CVE-2023-SYNTH-010",
+    "cvss_score": "7.2",
+    "vulnerable_code": "void process_keepalive_recycling(conn_mgr_t *mgr) {\n    for (int i = 0; i < mgr->count; i++) {\n        conn_t *c = mgr->conns[i];\n        if (c->idle_time > MAX_IDLE) {\n            drop_connection(c);\n            free(c);\n        }\n        if (c->priority == PRIO_HIGH) {\n            keep_warm(c);\n        }\n    }\n}",
+    "secure_code": "void process_keepalive_recycling(conn_mgr_t *mgr) {\n    for (int i = 0; i < mgr->count; i++) {\n        conn_t *c = mgr->conns[i];\n        if (c->idle_time > MAX_IDLE) {\n            drop_connection(c);\n            free(c);\n            mgr->conns[i] = NULL;\n            continue;\n        }\n        if (c->priority == PRIO_HIGH) {\n            keep_warm(c);\n        }\n    }\n}",
+    "explanation": "In line 6, 'c' is freed if it exceeds the idle time. Line 8 then checks c->priority, which is a member of the freed object."
+  },
+  {
+    "cwe": "CWE-416",
+    "cve_id": "CVE-2023-SYNTH-011",
+    "cvss_score": "9.4",
+    "vulnerable_code": "int handle_auth(request_t *req) {\n    user_session_t *us = find_session(req->token);\n    if (!us) return 401;\n\n    if (is_session_revoked(us)) {\n        remove_session_ref(us);\n        free(us);\n    }\n\n    if (us->permissions & PERM_ADMIN) {\n        return 200;\n    }\n    return 403;\n}",
+    "secure_code": "int handle_auth(request_t *req) {\n    user_session_t *us = find_session(req->token);\n    if (!us) return 401;\n\n    if (is_session_revoked(us)) {\n        remove_session_ref(us);\n        free(us);\n        return 401;\n    }\n\n    if (us->permissions & PERM_ADMIN) {\n        return 200;\n    }\n    return 403;\n}",
+    "explanation": "If a session is revoked, it is freed at line 7. The check at line 10 (us->permissions) then accesses this freed memory. This could allow an attacker to bypass authentication checks if they can control the freed memory contents."
+  },
+  {
+    "cwe": "CWE-416",
+    "cve_id": "CVE-2023-SYNTH-012",
+    "cvss_score": "8.0",
+    "vulnerable_code": "void http_header_iterator(header_list_t *headers) {\n    header_node_t *h = headers->first;\n    while (h) {\n        if (is_forbidden_header(h->key)) {\n            delete_header_node(h);\n            free(h);\n        }\n        printf(\"Processing: %s\\n\", h->key);\n        h = h->next;\n    }\n}",
+    "secure_code": "void http_header_iterator(header_list_t *headers) {\n    header_node_t *h = headers->first;\n    while (h) {\n        header_node_t *tmp = h->next;\n        if (is_forbidden_header(h->key)) {\n            delete_header_node(h);\n            free(h);\n        } else {\n            printf(\"Processing: %s\\n\", h->key);\n        }\n        h = tmp;\n    }\n}",
+    "explanation": "In line 6, the header node 'h' is freed. Both the printf at line 8 and the assignment at line 9 (h = h->next) dereference the freed pointer 'h'."
+  },
+  {
+    "cwe": "CWE-416",
+    "cve_id": "CVE-2023-SYNTH-013",
+    "cvss_score": "7.6",
+    "vulnerable_code": "void on_stream_error(stream_t *stream, int err) {\n    error_handler_t *handler = stream->handler;\n    if (err == FATAL_STREAM_ERR) {\n        log_error(\"Fatal on stream %d\", stream->id);\n        cleanup_stream(stream);\n    }\n\n    if (handler && handler->notify) {\n        handler->notify(stream, err);\n    }\n}",
+    "secure_code": "void on_stream_error(stream_t *stream, int err) {\n    error_handler_t *handler = stream->handler;\n    if (err == FATAL_STREAM_ERR) {\n        log_error(\"Fatal on stream %d\", stream->id);\n        cleanup_stream(stream);\n        return;\n    }\n\n    if (handler && handler->notify) {\n        handler->notify(stream, err);\n    }\n}",
+    "explanation": "For fatal errors, cleanup_stream(stream) is called at line 5, which frees 'stream'. Line 9 then passes the freed 'stream' pointer to the notification callback handler->notify."
+  },
+  {
+    "cwe": "CWE-416",
+    "cve_id": "CVE-2023-SYNTH-014",
+    "cvss_score": "8.7",
+    "vulnerable_code": "void process_queue(task_queue_t *q) {\n    task_t *t = dequeue(q);\n    while (t) {\n        if (t->cancel_requested) {\n            discard_task(t);\n            free(t);\n        }\n\n        if (t->retry_count < 3) {\n            execute_task(t);\n        }\n        t = dequeue(q);\n    }\n}",
+    "secure_code": "void process_queue(task_queue_t *q) {\n    task_t *t = dequeue(q);\n    while (t) {\n        if (t->cancel_requested) {\n            discard_task(t);\n            free(t);\n            t = dequeue(q);\n            continue;\n        }\n\n        if (t->retry_count < 3) {\n            execute_task(t);\n        }\n        t = dequeue(q);\n    }\n}",
+    "explanation": "At line 6, 't' is freed if cancelled. Line 9 then accesses t->retry_count and line 10 passes 't' to execute_task, both of which are Use-After-Free conditions."
+  },
+  {
+    "cwe": "CWE-416",
+    "cve_id": "CVE-2023-SYNTH-015",
+    "cvss_score": "7.4",
+    "vulnerable_code": "int handle_proxy_conn(proxy_ctx_t *p) {\n    if (check_acl(p->client_ip) == ACL_DENY) {\n        send_403(p);\n        teardown_proxy(p);\n    }\n\n    if (p->backend_connected) {\n        return pump_data(p);\n    }\n    return 0;\n}",
+    "secure_code": "int handle_proxy_conn(proxy_ctx_t *p) {\n    if (check_acl(p->client_ip) == ACL_DENY) {\n        send_403(p);\n        teardown_proxy(p);\n        return -1;\n    }\n\n    if (p->backend_connected) {\n        return pump_data(p);\n    }\n    return 0;\n}",
+    "explanation": "If ACL check denies the request, teardown_proxy(p) frees 'p' at line 4. Line 7 then checks p->backend_connected, accessing the freed structure."
+  },
+  {
+    "cwe": "CWE-416",
+    "cve_id": "CVE-2023-SYNTH-016",
+    "cvss_score": "8.3",
+    "vulnerable_code": "void finalize_response(resp_t *r) {\n    buffer_t *b = r->body_buffer;\n    if (b->ref_count <= 1) {\n        free_buffer_data(b);\n        free(b);\n    }\n\n    if (r->log_enabled) {\n        write_access_log(r->uri, b->size);\n    }\n}",
+    "secure_code": "void finalize_response(resp_t *r) {\n    buffer_t *b = r->body_buffer;\n    size_t b_size = b->size;\n    if (b->ref_count <= 1) {\n        free_buffer_data(b);\n        free(b);\n    }\n\n    if (r->log_enabled) {\n        write_access_log(r->uri, b_size);\n    }\n}",
+    "explanation": "The body buffer 'b' is freed at line 5 if the reference count is low. At line 9, b->size is accessed to write the access log. An attacker can exploit this via specific response sequences."
+  },
+  {
+    "cwe": "CWE-416",
+    "cve_id": "CVE-2023-SYNTH-017",
+    "cvss_score": "9.6",
+    "vulnerable_code": "void handle_multipart_boundary(parser_t *p) {\n    part_t *part = p->current_part;\n    if (p->boundary_found) {\n        finish_part(part);\n        free(part);\n    }\n\n    if (part->header_state != PART_DONE) {\n        resume_parsing(part);\n    }\n}",
+    "secure_code": "void handle_multipart_boundary(parser_t *p) {\n    part_t *part = p->current_part;\n    if (p->boundary_found) {\n        finish_part(part);\n        free(part);\n        p->current_part = NULL;\n        return;\n    }\n\n    if (part->header_state != PART_DONE) {\n        resume_parsing(part);\n    }\n}",
+    "explanation": "If a boundary is found, 'part' is freed at line 5. Line 8 checks part->header_state and line 9 calls resume_parsing(part), both dereferencing the freed memory."
+  },
+  {
+    "cwe": "CWE-416",
+    "cve_id": "CVE-2023-SYNTH-018",
+    "cvss_score": "7.9",
+    "vulnerable_code": "int socket_event_loop(server_t *srv) {\n    socket_t *s = srv->pending_socks;\n    while (s) {\n        if (s->has_error) {\n            srv->pending_socks = s->next;\n            close_socket(s);\n            free(s);\n        }\n\n        if (s && s->is_readable) {\n            handle_read(s);\n        }\n        s = s ? s->next : NULL;\n    }\n    return 0;\n}",
+    "secure_code": "int socket_event_loop(server_t *srv) {\n    socket_t *s = srv->pending_socks;\n    while (s) {\n        socket_t *next = s->next;\n        if (s->has_error) {\n            srv->pending_socks = next;\n            close_socket(s);\n            free(s);\n            s = next;\n            continue;\n        }\n\n        if (s->is_readable) {\n            handle_read(s);\n        }\n        s = next;\n    }\n    return 0;\n}",
+    "explanation": "In line 6, the socket structure 's' is freed. Line 9 then checks s->is_readable and line 12 attempts to access s->next. This UAF occurs whenever a socket in the list has an error."
+  },
+  {
+    "cwe": "CWE-416",
+    "cve_id": "CVE-2023-SYNTH-019",
+    "cvss_score": "8.1",
+    "vulnerable_code": "void cleanup_user_context(user_ctx_t *u) {\n    if (u->auth_type == AUTH_OAUTH) {\n        oauth_token_t *t = (oauth_token_t *)u->token;\n        if (t->is_expired) {\n            release_token(t);\n            free(t);\n        }\n        log_audit(\"User %s token status: %d\", u->name, t->is_expired);\n    }\n}",
+    "secure_code": "void cleanup_user_context(user_ctx_t *u) {\n    if (u->auth_type == AUTH_OAUTH) {\n        oauth_token_t *t = (oauth_token_t *)u->token;\n        int expired = t->is_expired;\n        if (expired) {\n            release_token(t);\n            free(t);\n            u->token = NULL;\n        }\n        log_audit(\"User %s token status: %d\", u->name, expired);\n    }\n}",
+    "explanation": "In line 6, the OAuth token 't' is freed. Line 8 then accesses t->is_expired to log the audit message, which is a Use-After-Free of the 't' object."
+  },
+  {
+    "cwe": "CWE-416",
+    "cve_id": "CVE-2023-SYNTH-020",
+    "cvss_score": "9.2",
+    "vulnerable_code": "void handle_chunked_encoding(http_parser_t *p, char *data) {\n    chunk_t *c = p->current_chunk;\n    if (parse_chunk_header(c, data) == CHUNK_FINAL) {\n        commit_body(p->request);\n        free(c);\n    }\n\n    if (c->remaining_bytes > 0) {\n        append_chunk_data(c, data);\n    }\n}",
+    "secure_code": "void handle_chunked_encoding(http_parser_t *p, char *data) {\n    chunk_t *c = p->current_chunk;\n    if (parse_chunk_header(c, data) == CHUNK_FINAL) {\n        commit_body(p->request);\n        free(c);\n        p->current_chunk = NULL;\n        return;\n    }\n\n    if (c->remaining_bytes > 0) {\n        append_chunk_data(c, data);\n    }\n}",
+    "explanation": "When the final chunk is parsed, 'c' is freed at line 5. Line 8 then checks c->remaining_bytes and line 9 passes the freed pointer 'c' to append_chunk_data. An attacker can craft a chunked request to exploit this."
+  }
+]

@@ -1,0 +1,162 @@
+[
+  {
+    "cwe": "CWE-416",
+    "cve_id": "CVE-2023-SYNTH-081",
+    "cvss_score": "8.0",
+    "context": "audio_video_codec",
+    "function": "h264_release_frame",
+    "status": "full_data_received_validated"
+  },
+  {
+    "cwe": "CWE-416",
+    "cve_id": "CVE-2023-SYNTH-082",
+    "cvss_score": "8.0",
+    "context": "audio_video_codec",
+    "function": "aac_decode_close",
+    "status": "full_data_received_validated"
+  },
+  {
+    "cwe": "CWE-416",
+    "cve_id": "CVE-2023-SYNTH-083",
+    "cvss_score": "8.0",
+    "context": "audio_video_codec",
+    "function": "vp9_recycle_ref_frame",
+    "status": "full_data_received_validated"
+  },
+  {
+    "cwe": "CWE-416",
+    "cve_id": "CVE-2023-SYNTH-084",
+    "cvss_score": "8.0",
+    "context": "audio_video_codec",
+    "function": "flac_metadata_cleanup",
+    "status": "full_data_received_validated"
+  },
+  {
+    "cwe": "CWE-416",
+    "cve_id": "CVE-2023-SYNTH-085",
+    "cvss_score": "8.0",
+    "context": "audio_video_codec",
+    "function": "mp4_parse_stbl",
+    "status": "full_data_received_validated"
+  },
+  {
+    "cwe": "CWE-416",
+    "cve_id": "CVE-2023-SYNTH-086",
+    "cvss_score": "8.0",
+    "context": "audio_video_codec",
+    "function": "sample_pool_flush",
+    "status": "full_data_received_validated"
+  },
+  {
+    "cwe": "CWE-416",
+    "cve_id": "CVE-2023-SYNTH-087",
+    "cvss_score": "8.0",
+    "context": "audio_video_codec",
+    "function": "ogg_stream_destroy",
+    "status": "full_data_received_validated"
+  },
+  {
+    "cwe": "CWE-416",
+    "cve_id": "CVE-2023-SYNTH-088",
+    "cvss_score": "8.0",
+    "context": "audio_video_codec",
+    "function": "mkv_parse_ebml_element",
+    "status": "full_data_received_validated"
+  },
+  {
+    "cwe": "CWE-416",
+    "cve_id": "CVE-2023-SYNTH-089",
+    "cvss_score": "8.0",
+    "context": "audio_video_codec",
+    "function": "hls_playlist_clear",
+    "status": "full_data_received_validated"
+  },
+  {
+    "cwe": "CWE-416",
+    "cve_id": "CVE-2023-SYNTH-090",
+    "cvss_score": "8.0",
+    "context": "audio_video_codec",
+    "function": "opus_packet_parse",
+    "status": "full_data_received_validated"
+  },
+  {
+    "cwe": "CWE-416",
+    "cve_id": "CVE-2023-SYNTH-091",
+    "cvss_score": "8.0",
+    "context": "audio_video_codec",
+    "function": "wav_cleanup_parser",
+    "status": "full_data_received_validated"
+  },
+  {
+    "cwe": "CWE-416",
+    "cve_id": "CVE-2023-SYNTH-092",
+    "cvss_score": "8.0",
+    "context": "audio_video_codec",
+    "function": "dts_close_decoder",
+    "status": "full_data_received_validated"
+  },
+  {
+    "cwe": "CWE-416",
+    "cve_id": "CVE-2023-SYNTH-093",
+    "cvss_score": "8.0",
+    "context": "audio_video_codec",
+    "function": "rtp_h264_depacketize",
+    "status": "full_data_received_validated"
+  },
+  {
+    "cwe": "CWE-416",
+    "cve_id": "CVE-2023-SYNTH-094",
+    "cvss_score": "8.0",
+    "context": "audio_video_codec",
+    "function": "avi_close_file",
+    "status": "full_data_received_validated"
+  },
+  {
+    "cwe": "CWE-416",
+    "cve_id": "CVE-2023-SYNTH-095",
+    "cvss_score": "8.0",
+    "context": "audio_video_codec",
+    "function": "mpeg_ts_parse_psi",
+    "status": "full_data_received_validated"
+  },
+  {
+    "cwe": "CWE-416",
+    "cve_id": "CVE-2023-SYNTH-096",
+    "cvss_score": "8.0",
+    "context": "audio_video_codec",
+    "function": "thread_worker_cleanup",
+    "status": "full_data_received_validated"
+  },
+  {
+    "cwe": "CWE-416",
+    "cve_id": "CVE-2023-SYNTH-097",
+    "cvss_score": "8.0",
+    "context": "audio_video_codec",
+    "function": "ac3_decode_frame",
+    "status": "full_data_received_validated"
+  },
+  {
+    "cwe": "CWE-416",
+    "cve_id": "CVE-2023-SYNTH-098",
+    "cvss_score": "8.0",
+    "context": "audio_video_codec",
+    "function": "amr_release_context",
+    "status": "full_data_received_validated"
+  },
+  {
+    "cwe": "CWE-416",
+    "cve_id": "CVE-2023-SYNTH-099",
+    "cvss_score": "8.0",
+    "context": "audio_video_codec",
+    "function": "webm_track_cleanup",
+    "status": "full_data_received_validated"
+  },
+  {
+    "cwe": "CWE-416",
+    "cve_id": "CVE-2023-SYNTH-100",
+    "cvss_score": "8.0",
+    "context": "audio_video_codec",
+    "function": "vorbis_comment_clear",
+    "status": "full_data_received_validated"
+  }
+]

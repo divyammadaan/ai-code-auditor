@@ -1,0 +1,35 @@
+{
+  "baseline": {
+    "model": "Baseline (Zero-shot DeepSeek-6.7B)",
+    "bleu4": 5.69,
+    "rougeL": 0.270,
+    "cwe_accuracy": 0.24,
+    "cwe_accuracy_valid": 0.329,
+    "unknown_count": 27,
+    "correct": 24,
+    "total": 100,
+    "per_cwe": {
+      "CWE-119": {"correct": 2, "total": 27},
+      "CWE-20":  {"correct": 7, "total": 25},
+      "CWE-399": {"correct": 6, "total": 14},
+      "CWE-125": {"correct": 6, "total": 10},
+      "CWE-200": {"correct": 0, "total": 8},
+      "CWE-264": {"correct": 3, "total": 5},
+      "CWE-190": {"correct": 0, "total": 4},
+      "CWE-416": {"correct": 0, "total": 4},
+      "CWE-189": {"correct": 0, "total": 2},
+      "CWE-362": {"correct": 0, "total": 1}
+    }
+  },
+  "finetuned": {
+    "model": "Fine-tuned (QLoRA DeepSeek-6.7B, top-10 CWEs)",
+    "bleu4": 5.69,
+    "rougeL": 0.270,
+    "cwe_accuracy": 0.26,
+    "cwe_accuracy_valid": 0.377,
+    "unknown_count": 31,
+    "correct": 26,
+    "total": 100,
+    "note": "26% overall, 37.7% on valid responses (69 non-truncated samples)"
+  }
+}

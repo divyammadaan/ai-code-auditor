@@ -1,0 +1,64 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Virtual environments
+venv/
+.venv/
+env/
+
+# Jupyter checkpoints
+.ipynb_checkpoints/
+
+# Data — raw files are too large for Git (re-download with scripts/download_dataset.py)
+data/raw/
+
+# Vector store — rebuild with scripts/build_vectorstore.py
+data/vectorstore/
+
+# Processed data — regenerate with data/preprocessing.py
+# (comment out if you want to include processed JSONL files)
+# data/processed/
+
+# Model weights — too large for Git (download from HuggingFace or Kaggle)
+*.safetensors
+models/lora_adapter/checkpoint-*/
+models/lora_adapter_v2/checkpoint-*/
+models/lora_adapter_v3/checkpoint-*/
+models/lora_adapter_v4/checkpoint-*/
+models/lora_adapter_v4_clean/
+models/lora_adapter_v4_upload.zip
+*.bin
+*.pt
+*.pth
+
+# Environment secrets
+.env
+*.env
+
+# IDE
+.vscode/settings.json
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Temp/debug scripts
+scripts/check_data.py
+scripts/dry_run_notebook.py
+
+# Old training artifacts (superseded)
+notebooks/training_log.json
+notebooks/training_loss.png

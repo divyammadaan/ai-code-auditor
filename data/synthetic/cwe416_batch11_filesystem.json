@@ -1,0 +1,82 @@
+[
+  {
+    "cwe": "CWE-416",
+    "cve_id": "CVE-2023-SYNTH-311",
+    "cvss_score": "8.5",
+    "vulnerable_code": "int vfs_open_file(vfs_t *vfs, const char *path, int flags) {\n    vfs_file_t *file = vfs_file_alloc();\n    if (!file) return -ENOMEM;\n\n    if (vfs_lookup(vfs, path, &file->inode) != 0) {\n        vfs_file_free(file);\n    }\n\n    file->flags  = flags;\n    file->offset = 0;\n    file->ref    = 1;\n    return fd_install(vfs, file);\n}",
+    "secure_code": "int vfs_open_file(vfs_t *vfs, const char *path, int flags) {\n    vfs_file_t *file = vfs_file_alloc();\n    if (!file) return -ENOMEM;\n\n    if (vfs_lookup(vfs, path, &file->inode) != 0) {\n        vfs_file_free(file);\n        return -ENOENT;\n    }\n\n    file->flags  = flags;\n    file->offset = 0;\n    file->ref    = 1;\n    return fd_install(vfs, file);\n}",
+    "explanation": "vfs_file_free(file) is called when the path lookup fails, but execution continues. file->flags, file->offset, and file->ref are then written on freed memory. Opening a non-existent path triggers this UAF in the VFS layer."
+  },
+  {
+    "cwe": "CWE-416",
+    "cve_id": "CVE-2023-SYNTH-312",
+    "cvss_score": "8.0",
+    "vulnerable_code": "ssize_t fs_read_block(fs_ctx_t *fs, uint64_t blk_no, void *out) {\n    fs_block_t *blk = fs_block_alloc(fs->block_size);\n    if (!blk) return -1;\n\n    if (blk_no >= fs->total_blocks) {\n        fs_block_free(blk);\n    }\n\n    disk_read(fs->dev, blk_no * fs->block_size, blk->data, fs->block_size);\n    memcpy(out, blk->data, fs->block_size);\n    fs_block_free(blk);\n    return fs->block_size;\n}",
+    "secure_code": "ssize_t fs_read_block(fs_ctx_t *fs, uint64_t blk_no, void *out) {\n    fs_block_t *blk = fs_block_alloc(fs->block_size);\n    if (!blk) return -1;\n\n    if (blk_no >= fs->total_blocks) {\n        fs_block_free(blk);\n        return -EINVAL;\n    }\n\n    disk_read(fs->dev, blk_no * fs->block_size, blk->data, fs->block_size);\n    memcpy(out, blk->data, fs->block_size);\n    fs_block_free(blk);\n    return fs->block_size;\n}",
+    "explanation": "fs_block_free(blk) is called when the block number is out of range, but execution continues. disk_read then writes into blk->data on freed memory. Requesting an out-of-range block number triggers this UAF."
+  },
+  {
+    "cwe": "CWE-416",
+    "cve_id": "CVE-2023-SYNTH-313",
+    "cvss_score": "7.8",
+    "vulnerable_code": "int inode_create(fs_t *fs, const char *name, mode_t mode) {\n    inode_t *ino = inode_alloc(fs);\n    if (!ino) return -ENOMEM;\n\n    if (strlen(name) > MAX_FILENAME) {\n        inode_free(ino);\n    }\n\n    strncpy(ino->name, name, MAX_FILENAME);\n    ino->mode  = mode;\n    ino->nlink = 1;\n    ino->size  = 0;\n    return inode_insert(fs, ino);\n}",
+    "secure_code": "int inode_create(fs_t *fs, const char *name, mode_t mode) {\n    inode_t *ino = inode_alloc(fs);\n    if (!ino) return -ENOMEM;\n\n    if (strlen(name) > MAX_FILENAME) {\n        inode_free(ino);\n        return -ENAMETOOLONG;\n    }\n\n    strncpy(ino->name, name, MAX_FILENAME);\n    ino->mode  = mode;\n    ino->nlink = 1;\n    ino->size  = 0;\n    return inode_insert(fs, ino);\n}",
+    "explanation": "inode_free(ino) is called when the filename is too long, but execution continues. strncpy and subsequent field writes access freed inode memory. Creating a file with an excessively long name triggers this UAF."
+  },
+  {
+    "cwe": "CWE-416",
+    "cve_id": "CVE-2023-SYNTH-314",
+    "cvss_score": "8.2",
+    "vulnerable_code": "dir_entry_t *dir_lookup(dir_t *dir, const char *name) {\n    dir_entry_t *ent = dir_entry_alloc();\n    if (!ent) return NULL;\n\n    if (dir->entry_count == 0) {\n        dir_entry_free(ent);\n    }\n\n    for (int i = 0; i < dir->entry_count; i++) {\n        if (strcmp(dir->entries[i].name, name) == 0) {\n            memcpy(ent, &dir->entries[i], sizeof(dir_entry_t));\n            return ent;\n        }\n    }\n    dir_entry_free(ent);\n    return NULL;\n}",
+    "secure_code": "dir_entry_t *dir_lookup(dir_t *dir, const char *name) {\n    dir_entry_t *ent = dir_entry_alloc();\n    if (!ent) return NULL;\n\n    if (dir->entry_count == 0) {\n        dir_entry_free(ent);\n        return NULL;\n    }\n\n    for (int i = 0; i < dir->entry_count; i++) {\n        if (strcmp(dir->entries[i].name, name) == 0) {\n            memcpy(ent, &dir->entries[i], sizeof(dir_entry_t));\n            return ent;\n        }\n    }\n    dir_entry_free(ent);\n    return NULL;\n}",
+    "explanation": "dir_entry_free(ent) is called when the directory is empty, but the for loop still executes. memcpy writes into freed ent memory when a match is found. Looking up a file in an empty directory triggers this UAF."
+  },
+  {
+    "cwe": "CWE-416",
+    "cve_id": "CVE-2023-SYNTH-315",
+    "cvss_score": "7.6",
+    "vulnerable_code": "int pipe_write(pipe_t *pipe, const void *buf, size_t count) {\n    pipe_buf_t *pbuf = pipe_buf_alloc(count);\n    if (!pbuf) return -ENOMEM;\n\n    if (pipe->readers == 0) {\n        pipe_buf_free(pbuf);\n    }\n\n    memcpy(pbuf->data, buf, count);\n    pbuf->len = count;\n    ring_enqueue(&pipe->ring, pbuf);\n    wake_up(&pipe->read_wait);\n    return count;\n}",
+    "secure_code": "int pipe_write(pipe_t *pipe, const void *buf, size_t count) {\n    pipe_buf_t *pbuf = pipe_buf_alloc(count);\n    if (!pbuf) return -ENOMEM;\n\n    if (pipe->readers == 0) {\n        pipe_buf_free(pbuf);\n        return -EPIPE;\n    }\n\n    memcpy(pbuf->data, buf, count);\n    pbuf->len = count;\n    ring_enqueue(&pipe->ring, pbuf);\n    wake_up(&pipe->read_wait);\n    return count;\n}",
+    "explanation": "pipe_buf_free(pbuf) is called when there are no readers, but execution continues. memcpy writes into pbuf->data on freed memory. Writing to a pipe with no readers triggers this UAF."
+  },
+  {
+    "cwe": "CWE-416",
+    "cve_id": "CVE-2023-SYNTH-316",
+    "cvss_score": "8.7",
+    "vulnerable_code": "int mmap_region(mm_t *mm, uintptr_t addr, size_t len, int prot) {\n    vm_area_t *vma = vm_area_alloc();\n    if (!vma) return -ENOMEM;\n\n    if (len == 0 || len > MAX_MMAP_SIZE) {\n        vm_area_free(vma);\n    }\n\n    vma->start = addr;\n    vma->end   = addr + len;\n    vma->prot  = prot;\n    vma->flags = VM_READ | VM_WRITE;\n    rb_insert(&mm->vma_tree, &vma->rb_node);\n    return 0;\n}",
+    "secure_code": "int mmap_region(mm_t *mm, uintptr_t addr, size_t len, int prot) {\n    vm_area_t *vma = vm_area_alloc();\n    if (!vma) return -ENOMEM;\n\n    if (len == 0 || len > MAX_MMAP_SIZE) {\n        vm_area_free(vma);\n        return -EINVAL;\n    }\n\n    vma->start = addr;\n    vma->end   = addr + len;\n    vma->prot  = prot;\n    vma->flags = VM_READ | VM_WRITE;\n    rb_insert(&mm->vma_tree, &vma->rb_node);\n    return 0;\n}",
+    "explanation": "vm_area_free(vma) is called when the mapping length is invalid, but execution continues. vma->start, vma->end, vma->prot, and vma->flags are then written on freed memory. Calling mmap with zero or oversized length triggers this UAF."
+  },
+  {
+    "cwe": "CWE-416",
+    "cve_id": "CVE-2023-SYNTH-317",
+    "cvss_score": "7.9",
+    "vulnerable_code": "int dentry_cache_insert(dcache_t *dc, const char *path, inode_t *ino) {\n    dentry_t *de = dentry_alloc();\n    if (!de) return -ENOMEM;\n\n    if (dc->count >= dc->capacity) {\n        dentry_free(de);\n    }\n\n    strncpy(de->path, path, PATH_MAX);\n    de->inode = ino;\n    de->ref   = 1;\n    hash_insert(&dc->table, de);\n    return 0;\n}",
+    "secure_code": "int dentry_cache_insert(dcache_t *dc, const char *path, inode_t *ino) {\n    dentry_t *de = dentry_alloc();\n    if (!de) return -ENOMEM;\n\n    if (dc->count >= dc->capacity) {\n        dentry_free(de);\n        return -ENOSPC;\n    }\n\n    strncpy(de->path, path, PATH_MAX);\n    de->inode = ino;\n    de->ref   = 1;\n    hash_insert(&dc->table, de);\n    return 0;\n}",
+    "explanation": "dentry_free(de) is called when the dentry cache is full, but execution continues. strncpy and subsequent field writes access freed dentry memory. Inserting into a full dentry cache triggers this UAF."
+  },
+  {
+    "cwe": "CWE-416",
+    "cve_id": "CVE-2023-SYNTH-318",
+    "cvss_score": "8.1",
+    "vulnerable_code": "int tmpfs_create_node(tmpfs_t *fs, const char *name, int type) {\n    tmpfs_node_t *node = tmpfs_node_alloc(type);\n    if (!node) return -ENOMEM;\n\n    if (type != TMPFS_FILE && type != TMPFS_DIR) {\n        tmpfs_node_free(node);\n    }\n\n    node->type  = type;\n    node->size  = 0;\n    node->mtime = current_time();\n    strncpy(node->name, name, TMPFS_NAME_MAX);\n    return tmpfs_link(fs, node);\n}",
+    "secure_code": "int tmpfs_create_node(tmpfs_t *fs, const char *name, int type) {\n    tmpfs_node_t *node = tmpfs_node_alloc(type);\n    if (!node) return -ENOMEM;\n\n    if (type != TMPFS_FILE && type != TMPFS_DIR) {\n        tmpfs_node_free(node);\n        return -EINVAL;\n    }\n\n    node->type  = type;\n    node->size  = 0;\n    node->mtime = current_time();\n    strncpy(node->name, name, TMPFS_NAME_MAX);\n    return tmpfs_link(fs, node);\n}",
+    "explanation": "tmpfs_node_free(node) is called for an unknown node type, but execution continues. node->type, node->size, node->mtime, and node->name are then written on freed memory. Creating a tmpfs node with an invalid type triggers this UAF."
+  },
+  {
+    "cwe": "CWE-416",
+    "cve_id": "CVE-2023-SYNTH-319",
+    "cvss_score": "7.7",
+    "vulnerable_code": "int ext4_read_inode(ext4_sb_t *sb, uint32_t ino_num, ext4_inode_t **out) {\n    ext4_inode_t *ino = ext4_inode_alloc();\n    if (!ino) return -ENOMEM;\n\n    if (ino_num < EXT4_FIRST_INO || ino_num > sb->s_inodes_count) {\n        ext4_inode_free(ino);\n    }\n\n    uint64_t off = ext4_inode_offset(sb, ino_num);\n    block_read(sb->dev, off, ino, sb->s_inode_size);\n    *out = ino;\n    return 0;\n}",
+    "secure_code": "int ext4_read_inode(ext4_sb_t *sb, uint32_t ino_num, ext4_inode_t **out) {\n    ext4_inode_t *ino = ext4_inode_alloc();\n    if (!ino) return -ENOMEM;\n\n    if (ino_num < EXT4_FIRST_INO || ino_num > sb->s_inodes_count) {\n        ext4_inode_free(ino);\n        return -EINVAL;\n    }\n\n    uint64_t off = ext4_inode_offset(sb, ino_num);\n    block_read(sb->dev, off, ino, sb->s_inode_size);\n    *out = ino;\n    return 0;\n}",
+    "explanation": "ext4_inode_free(ino) is called when the inode number is out of range, but execution continues. block_read then writes into freed inode memory. Requesting an invalid inode number on an ext4 filesystem triggers this UAF."
+  },
+  {
+    "cwe": "CWE-416",
+    "cve_id": "CVE-2023-SYNTH-320",
+    "cvss_score": "8.3",
+    "vulnerable_code": "int journal_write_commit(journal_t *j, txn_t *txn) {\n    journal_block_t *jb = journal_block_alloc();\n    if (!jb) return -ENOMEM;\n\n    if (txn->state != TXN_COMPLETE) {\n        journal_block_free(jb);\n    }\n\n    jb->seq   = txn->seq;\n    jb->type  = JBD2_COMMIT_BLOCK;\n    jb->csum  = compute_csum(txn);\n    journal_submit_block(j, jb);\n    return 0;\n}",
+    "secure_code": "int journal_write_commit(journal_t *j, txn_t *txn) {\n    journal_block_t *jb = journal_block_alloc();\n    if (!jb) return -ENOMEM;\n\n    if (txn->state != TXN_COMPLETE) {\n        journal_block_free(jb);\n        return -EINVAL;\n    }\n\n    jb->seq   = txn->seq;\n    jb->type  = JBD2_COMMIT_BLOCK;\n    jb->csum  = compute_csum(txn);\n    journal_submit_block(j, jb);\n    return 0;\n}",
+    "explanation": "journal_block_free(jb) is called when the transaction is not in COMPLETE state, but execution continues. jb->seq, jb->type, and jb->csum are then written on freed memory. Committing an incomplete transaction triggers this UAF in the journaling layer."
+  }
+]

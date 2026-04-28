@@ -1,0 +1,42 @@
+{
+  "improvement_cases": 22,
+  "hallucination_cases": 0,
+  "top_improvements": [
+    {
+      "ground_truth_cwe": "CWE-732",
+      "baseline_pred": "Unknown",
+      "finetuned_pred": "CWE-732",
+      "code_snippet": " bool PlatformSensorProviderBase::CreateSharedBufferIfNeeded() {\n   DCHECK_CALLED_ON_VALID_THREAD(thread_checker_);\n  if (shared_buffer_handle_.is_valid())\n     return true;\n \n  shared_buffer_handle_ ",
+      "finetuned_output": "## Security Audit Report\n\n**Vulnerability:** CWE-732\n**CVE Reference:** CVE-2018-6057\n**CVSS Score:** 6.8 (MEDIUM)\n\n### What's Wrong\nThis function contains a **CWE-732** vulnerability. The issue allows an attacker to exploit improper memory or input handling, potentially leading to code execution, data leakage, or denial of service.\n\n### Secure Rewrite\n```c\n bool PlatformSensorProviderBase::CreateSharedBufferIfNeeded() {\n   DCHECK_CALLED_ON_VALID_THREAD(thread_checker_);\n  if (shared_buffer_hand"
+    },
+    {
+      "ground_truth_cwe": "CWE-125",
+      "baseline_pred": "Unknown",
+      "finetuned_pred": "CWE-125",
+      "code_snippet": "ikev2_auth_print(netdissect_options *ndo, u_char tpay,\n\t\tconst struct isakmp_gen *ext,\n\t\tu_int item_len _U_, const u_char *ep,\n\t\tuint32_t phase _U_, uint32_t doi _U_,\n\t\tuint32_t proto _U_, int depth _",
+      "finetuned_output": "\n\t}\n\treturn (const u_char *)ext + len;\ntrunc:\n\tND_PRINT((ndo,\" [|%s]\", NPSTR(tpay)));\n\treturn NULL;\n}\n\n``` [/INST] ## Security Audit Report\n\n**Vulnerability:** CWE-125\n**CVE Reference:** CVE-2017-9609\n**CVSS Score:** 7.5 (HIGH)\n\n### What's Wrong\nThis function contains a **CWE-125** vulnerability. The issue allows an attacker to exploit improper memory or input handling, potentially leading to code execution, data leakage, or denial of service.\n\n### Secure Rewrite\n```c\nikev2_auth_print(netdissect"
+    },
+    {
+      "ground_truth_cwe": "CWE-119",
+      "baseline_pred": "Unknown",
+      "finetuned_pred": "CWE-119",
+      "code_snippet": "long Cluster::CreateBlock(\n    long long id,\n    long long pos,   //absolute pos of payload\n    long long size,\n    long long discard_padding)\n{\n    assert((id == 0x20) || (id == 0x23));  //BlockGroup",
+      "finetuned_output": "## Security Audit Report\n\n**Vulnerability:** CWE-119\n**CVE Reference:** CVE-2016-1621\n**CVSS Score:** 10.0 (CRITICAL)\n\n### What's Wrong\nThis function contains a **CWE-119** vulnerability. The issue allows an attacker to exploit improper memory or input handling, potentially leading to code execution, data leakage, or denial of service.\n\n### Secure Rewrite\n```c\nlong Cluster::CreateBlock(\n    long long id,\n    long long pos,   //absolute pos of payload\n    long long size,\n    long long discard_pad"
+    },
+    {
+      "ground_truth_cwe": "CWE-399",
+      "baseline_pred": "Unknown",
+      "finetuned_pred": "CWE-399",
+      "code_snippet": "  virtual InputMethodDescriptor current_input_method() const {\n     if (current_input_method_.id.empty()) {\n       return input_method::GetFallbackInputMethodDescriptor();\n     }\n     return current_i",
+      "finetuned_output": "## Security Audit Report\n\n**Vulnerability:** CWE-399\n**CVE Reference:** CVE-2011-2804\n**CVSS Score:** 7.5 (HIGH)\n\n### What's Wrong\nThis function contains a **CWE-399** vulnerability. The issue allows an attacker to exploit improper memory or input handling, potentially leading to code execution, data leakage, or denial of service.\n\n### Secure Rewrite\n```c\n  virtual InputMethodDescriptor current_input_method() const {\n     if (current_input_method_.id.empty()) {\n       return input_method::GetFal"
+    },
+    {
+      "ground_truth_cwe": "CWE-20",
+      "baseline_pred": "Unknown",
+      "finetuned_pred": "CWE-20",
+      "code_snippet": "static void mptsas_fetch_request(MPTSASState *s)\n{\n    PCIDevice *pci = (PCIDevice *) s;\n    char req[MPTSAS_MAX_REQUEST_SIZE];\n    MPIRequestHeader *hdr = (MPIRequestHeader *)req;\n     hwaddr addr;\n ",
+      "finetuned_output": "## Security Audit Report\n\n**Vulnerability:** CWE-20\n**CVE Reference:** CVE-2016-5842\n**CVSS Score:** 7.5 (HIGH)\n\n### What's Wrong\nThis function contains a **CWE-20** vulnerability. The issue allows an attacker to exploit improper memory or input handling, potentially leading to code execution, data leakage, or denial of service.\n\n### Secure Rewrite\n```c\nstatic void mptsas_fetch_request(MPTSASState *s)\n{\n    PCIDevice *pci = (PCIDevice *) s;\n    char req[MPTSAS_MAX_REQUEST_SIZE];\n    MPIRequestHe"
+    }
+  ],
+  "hallucination_examples": []
+}

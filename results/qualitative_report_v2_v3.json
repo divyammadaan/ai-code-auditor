@@ -1,0 +1,439 @@
+{
+  "v2": {
+    "model": "v2 Fine-tuned (QLoRA, Big-Vul only)",
+    "total_samples": 100,
+    "correct_cwe": 24,
+    "cwe_accuracy": 0.24,
+    "unknown_predictions": 27,
+    "wrong_cwe_predictions": 49,
+    "truncated_outputs": 0,
+    "hallucination": {
+      "count": 3,
+      "rate": 0.03,
+      "types": {
+        "null_deref": 2,
+        "buffer_overflow": 1
+      }
+    },
+    "per_cwe_accuracy": {
+      "CWE-399": {
+        "correct": 6,
+        "total": 14,
+        "accuracy": 0.429
+      },
+      "CWE-362": {
+        "correct": 0,
+        "total": 1,
+        "accuracy": 0.0
+      },
+      "CWE-119": {
+        "correct": 2,
+        "total": 27,
+        "accuracy": 0.074
+      },
+      "CWE-416": {
+        "correct": 0,
+        "total": 4,
+        "accuracy": 0.0
+      },
+      "CWE-20": {
+        "correct": 7,
+        "total": 25,
+        "accuracy": 0.28
+      },
+      "CWE-200": {
+        "correct": 0,
+        "total": 8,
+        "accuracy": 0.0
+      },
+      "CWE-190": {
+        "correct": 0,
+        "total": 4,
+        "accuracy": 0.0
+      },
+      "CWE-189": {
+        "correct": 0,
+        "total": 2,
+        "accuracy": 0.0
+      },
+      "CWE-125": {
+        "correct": 6,
+        "total": 10,
+        "accuracy": 0.6
+      },
+      "CWE-264": {
+        "correct": 3,
+        "total": 5,
+        "accuracy": 0.6
+      }
+    },
+    "top_confusions": {
+      "CWE-119": {
+        "Unknown": 10,
+        "CWE-190": 5,
+        "CWE-189": 3
+      },
+      "CWE-20": {
+        "Unknown": 8,
+        "CWE-264": 3,
+        "CWE-399": 2
+      },
+      "CWE-200": {
+        "CWE-264": 4,
+        "CWE-20": 1,
+        "Unknown": 1
+      },
+      "CWE-399": {
+        "CWE-20": 4,
+        "CWE-362": 1,
+        "CWE-264": 1
+      },
+      "CWE-190": {
+        "Unknown": 2,
+        "CWE-125": 1,
+        "CWE-399": 1
+      }
+    },
+    "failure_cases": [
+      {
+        "sample_id": 0,
+        "ground_truth_cwe": "CWE-200",
+        "predicted_cwe": "CWE-264",
+        "error_type": "wrong_cwe",
+        "output_length": 567,
+        "code_snippet": "destroy_one_secret (gpointer data)\n{\n \tchar *secret = (char *) data;\n \n \t/* Don't leave the secret lying around in memory */\ng_message (\"%s: destroyin..."
+      },
+      {
+        "sample_id": 1,
+        "ground_truth_cwe": "CWE-119",
+        "predicted_cwe": "CWE-190",
+        "error_type": "wrong_cwe",
+        "output_length": 543,
+        "code_snippet": " png_read_finish_row(png_structp png_ptr)\n {\n #ifdef PNG_READ_INTERLACING_SUPPORTED\n    /* Arrays to facilitate easy interlacing - use pass (0 - 6) as..."
+      },
+      {
+        "sample_id": 2,
+        "ground_truth_cwe": "CWE-20",
+        "predicted_cwe": "Unknown",
+        "error_type": "unknown_prediction",
+        "output_length": 437,
+        "code_snippet": " static MagickBooleanType ReadUncompressedRGBA(Image *image, DDSInfo *dds_info,\n  ExceptionInfo *exception)\n{\n  PixelPacket\n    *q;\n\n  ssize_t\n    alp..."
+      },
+      {
+        "sample_id": 3,
+        "ground_truth_cwe": "CWE-119",
+        "predicted_cwe": "CWE-20",
+        "error_type": "wrong_cwe",
+        "output_length": 672,
+        "code_snippet": "ServiceManagerContext::ServiceManagerContext() {\n  service_manager::mojom::ServiceRequest packaged_services_request;\n  if (service_manager::ServiceMan..."
+      },
+      {
+        "sample_id": 4,
+        "ground_truth_cwe": "CWE-20",
+        "predicted_cwe": "Unknown",
+        "error_type": "unknown_prediction",
+        "output_length": 410,
+        "code_snippet": "static long restore_tm_sigcontexts(struct pt_regs *regs,\n\t\t\t\t   struct sigcontext __user *sc,\n\t\t\t\t   struct sigcontext __user *tm_sc)\n{\n#ifdef CONFIG_..."
+      },
+      {
+        "sample_id": 8,
+        "ground_truth_cwe": "CWE-20",
+        "predicted_cwe": "CWE-189",
+        "error_type": "wrong_cwe",
+        "output_length": 529,
+        "code_snippet": "static int nr_recvmsg(struct kiocb *iocb, struct socket *sock,\n\t\t      struct msghdr *msg, size_t size, int flags)\n{\n\tstruct sock *sk = sock->sk;\n\tstr..."
+      },
+      {
+        "sample_id": 9,
+        "ground_truth_cwe": "CWE-190",
+        "predicted_cwe": "CWE-125",
+        "error_type": "wrong_cwe",
+        "output_length": 433,
+        "code_snippet": "static inline void write_s3row_data(\n\tconst entity_stage3_row *r,\n\tunsigned orig_cp,\n\tenum entity_charset charset,\n\tzval *arr)\n{\n\tchar key[9] = \"\"; /*..."
+      },
+      {
+        "sample_id": 10,
+        "ground_truth_cwe": "CWE-119",
+        "predicted_cwe": "CWE-189",
+        "error_type": "wrong_cwe",
+        "output_length": 592,
+        "code_snippet": "void PPB_URLLoader_Impl::RunCallback(int32_t result) {\n  if (!pending_callback_.get()) {\n     CHECK(main_document_loader_);\n     return;\n   }\n   Track..."
+      },
+      {
+        "sample_id": 11,
+        "ground_truth_cwe": "CWE-20",
+        "predicted_cwe": "CWE-399",
+        "error_type": "wrong_cwe",
+        "output_length": 571,
+        "code_snippet": " void UpdateAtlas::didSwapBuffers()\n {\n     m_areaAllocator.clear();\n    buildLayoutIfNeeded();\n }\n..."
+      },
+      {
+        "sample_id": 12,
+        "ground_truth_cwe": "CWE-200",
+        "predicted_cwe": "CWE-20",
+        "error_type": "wrong_cwe",
+        "output_length": 587,
+        "code_snippet": "entry_guard_obeys_restriction(const entry_guard_t *guard,\n                              const entry_guard_restriction_t *rst)\n{\n  tor_assert(guard);\n ..."
+      },
+      {
+        "sample_id": 13,
+        "ground_truth_cwe": "CWE-20",
+        "predicted_cwe": "CWE-190",
+        "error_type": "wrong_cwe",
+        "output_length": 581,
+        "code_snippet": "static MagickBooleanType ReadDXT1(Image *image, DDSInfo *dds_info,\n  ExceptionInfo *exception)\n{\n  DDSColors\n    colors;\n\n  PixelPacket\n    *q;\n\n  reg..."
+      },
+      {
+        "sample_id": 14,
+        "ground_truth_cwe": "CWE-119",
+        "predicted_cwe": "Unknown",
+        "error_type": "unknown_prediction",
+        "output_length": 481,
+        "code_snippet": " int main(int argc, char **argv) {\n FILE *infile = NULL;\n vpx_codec_ctx_t codec = {0};\n vpx_codec_enc_cfg_t cfg = {0};\n int frame_count = 0;\n vpx_imag..."
+      },
+      {
+        "sample_id": 15,
+        "ground_truth_cwe": "CWE-20",
+        "predicted_cwe": "CWE-200",
+        "error_type": "wrong_cwe",
+        "output_length": 537,
+        "code_snippet": "static void mptsas_fetch_request(MPTSASState *s)\n{\n    PCIDevice *pci = (PCIDevice *) s;\n    char req[MPTSAS_MAX_REQUEST_SIZE];\n    MPIRequestHeader *..."
+      },
+      {
+        "sample_id": 17,
+        "ground_truth_cwe": "CWE-20",
+        "predicted_cwe": "Unknown",
+        "error_type": "unknown_prediction",
+        "output_length": 635,
+        "code_snippet": "void ImageLoader::DoUpdateFromElement(BypassMainWorldBehavior bypass_behavior,\n                                      UpdateFromElementBehavior update_..."
+      },
+      {
+        "sample_id": 18,
+        "ground_truth_cwe": "CWE-20",
+        "predicted_cwe": "Unknown",
+        "error_type": "unknown_prediction",
+        "output_length": 385,
+        "code_snippet": "BGD_DECLARE(gdImagePtr) gdImageCreate (int sx, int sy)\n{\n\tint i;\n\tgdImagePtr im;\n\n \tif (overflow2(sx, sy)) {\n \t\treturn NULL;\n \t}\n \tif (overflow2(sizeo..."
+      }
+    ]
+  },
+  "v3": {
+    "model": "v3 Fine-tuned (QLoRA, Big-Vul + Synthetic)",
+    "total_samples": 100,
+    "correct_cwe": 17,
+    "cwe_accuracy": 0.17,
+    "unknown_predictions": 52,
+    "wrong_cwe_predictions": 31,
+    "truncated_outputs": 0,
+    "hallucination": {
+      "count": 3,
+      "rate": 0.03,
+      "types": {
+        "use_after_free": 1,
+        "buffer_overflow": 1,
+        "null_deref": 1
+      }
+    },
+    "per_cwe_accuracy": {
+      "CWE-399": {
+        "correct": 2,
+        "total": 14,
+        "accuracy": 0.143
+      },
+      "CWE-362": {
+        "correct": 0,
+        "total": 1,
+        "accuracy": 0.0
+      },
+      "CWE-119": {
+        "correct": 0,
+        "total": 27,
+        "accuracy": 0.0
+      },
+      "CWE-416": {
+        "correct": 1,
+        "total": 4,
+        "accuracy": 0.25
+      },
+      "CWE-20": {
+        "correct": 10,
+        "total": 25,
+        "accuracy": 0.4
+      },
+      "CWE-200": {
+        "correct": 0,
+        "total": 8,
+        "accuracy": 0.0
+      },
+      "CWE-190": {
+        "correct": 2,
+        "total": 4,
+        "accuracy": 0.5
+      },
+      "CWE-189": {
+        "correct": 0,
+        "total": 2,
+        "accuracy": 0.0
+      },
+      "CWE-125": {
+        "correct": 0,
+        "total": 10,
+        "accuracy": 0.0
+      },
+      "CWE-264": {
+        "correct": 2,
+        "total": 5,
+        "accuracy": 0.4
+      }
+    },
+    "top_confusions": {
+      "CWE-119": {
+        "Unknown": 18,
+        "CWE-190": 3,
+        "CWE-416": 2
+      },
+      "CWE-20": {
+        "Unknown": 12,
+        "CWE-190": 1,
+        "CWE-399": 1
+      },
+      "CWE-399": {
+        "CWE-20": 6,
+        "Unknown": 4,
+        "CWE-362": 1
+      },
+      "CWE-125": {
+        "Unknown": 8,
+        "CWE-20": 1,
+        "CWE-190": 1
+      },
+      "CWE-200": {
+        "Unknown": 4,
+        "CWE-125": 1,
+        "CWE-20": 1
+      }
+    },
+    "failure_cases": [
+      {
+        "sample_id": 0,
+        "ground_truth_cwe": "CWE-200",
+        "predicted_cwe": "CWE-125",
+        "error_type": "wrong_cwe",
+        "output_length": 552,
+        "code_snippet": "destroy_one_secret (gpointer data)\n{\n \tchar *secret = (char *) data;\n \n \t/* Don't leave the secret lying around in memory */\ng_message (\"%s: destroyin..."
+      },
+      {
+        "sample_id": 1,
+        "ground_truth_cwe": "CWE-119",
+        "predicted_cwe": "Unknown",
+        "error_type": "unknown_prediction",
+        "output_length": 495,
+        "code_snippet": " png_read_finish_row(png_structp png_ptr)\n {\n #ifdef PNG_READ_INTERLACING_SUPPORTED\n    /* Arrays to facilitate easy interlacing - use pass (0 - 6) as..."
+      },
+      {
+        "sample_id": 2,
+        "ground_truth_cwe": "CWE-20",
+        "predicted_cwe": "Unknown",
+        "error_type": "unknown_prediction",
+        "output_length": 436,
+        "code_snippet": " static MagickBooleanType ReadUncompressedRGBA(Image *image, DDSInfo *dds_info,\n  ExceptionInfo *exception)\n{\n  PixelPacket\n    *q;\n\n  ssize_t\n    alp..."
+      },
+      {
+        "sample_id": 3,
+        "ground_truth_cwe": "CWE-119",
+        "predicted_cwe": "Unknown",
+        "error_type": "unknown_prediction",
+        "output_length": 689,
+        "code_snippet": "ServiceManagerContext::ServiceManagerContext() {\n  service_manager::mojom::ServiceRequest packaged_services_request;\n  if (service_manager::ServiceMan..."
+      },
+      {
+        "sample_id": 4,
+        "ground_truth_cwe": "CWE-20",
+        "predicted_cwe": "Unknown",
+        "error_type": "unknown_prediction",
+        "output_length": 405,
+        "code_snippet": "static long restore_tm_sigcontexts(struct pt_regs *regs,\n\t\t\t\t   struct sigcontext __user *sc,\n\t\t\t\t   struct sigcontext __user *tm_sc)\n{\n#ifdef CONFIG_..."
+      },
+      {
+        "sample_id": 5,
+        "ground_truth_cwe": "CWE-125",
+        "predicted_cwe": "Unknown",
+        "error_type": "unknown_prediction",
+        "output_length": 548,
+        "code_snippet": "ikev2_auth_print(netdissect_options *ndo, u_char tpay,\n\t\tconst struct isakmp_gen *ext,\n\t\tu_int item_len _U_, const u_char *ep,\n\t\tuint32_t phase _U_, u..."
+      },
+      {
+        "sample_id": 6,
+        "ground_truth_cwe": "CWE-119",
+        "predicted_cwe": "Unknown",
+        "error_type": "unknown_prediction",
+        "output_length": 541,
+        "code_snippet": "long Cluster::CreateBlock(\n    long long id,\n    long long pos,   //absolute pos of payload\n    long long size,\n    long long discard_padding)\n{\n    a..."
+      },
+      {
+        "sample_id": 7,
+        "ground_truth_cwe": "CWE-399",
+        "predicted_cwe": "CWE-20",
+        "error_type": "wrong_cwe",
+        "output_length": 674,
+        "code_snippet": "  virtual InputMethodDescriptor current_input_method() const {\n     if (current_input_method_.id.empty()) {\n       return input_method::GetFallbackInp..."
+      },
+      {
+        "sample_id": 8,
+        "ground_truth_cwe": "CWE-20",
+        "predicted_cwe": "Unknown",
+        "error_type": "unknown_prediction",
+        "output_length": 390,
+        "code_snippet": "static int nr_recvmsg(struct kiocb *iocb, struct socket *sock,\n\t\t      struct msghdr *msg, size_t size, int flags)\n{\n\tstruct sock *sk = sock->sk;\n\tstr..."
+      },
+      {
+        "sample_id": 10,
+        "ground_truth_cwe": "CWE-119",
+        "predicted_cwe": "CWE-416",
+        "error_type": "wrong_cwe",
+        "output_length": 600,
+        "code_snippet": "void PPB_URLLoader_Impl::RunCallback(int32_t result) {\n  if (!pending_callback_.get()) {\n     CHECK(main_document_loader_);\n     return;\n   }\n   Track..."
+      },
+      {
+        "sample_id": 12,
+        "ground_truth_cwe": "CWE-200",
+        "predicted_cwe": "CWE-20",
+        "error_type": "wrong_cwe",
+        "output_length": 588,
+        "code_snippet": "entry_guard_obeys_restriction(const entry_guard_t *guard,\n                              const entry_guard_restriction_t *rst)\n{\n  tor_assert(guard);\n ..."
+      },
+      {
+        "sample_id": 13,
+        "ground_truth_cwe": "CWE-20",
+        "predicted_cwe": "Unknown",
+        "error_type": "unknown_prediction",
+        "output_length": 459,
+        "code_snippet": "static MagickBooleanType ReadDXT1(Image *image, DDSInfo *dds_info,\n  ExceptionInfo *exception)\n{\n  DDSColors\n    colors;\n\n  PixelPacket\n    *q;\n\n  reg..."
+      },
+      {
+        "sample_id": 14,
+        "ground_truth_cwe": "CWE-119",
+        "predicted_cwe": "Unknown",
+        "error_type": "unknown_prediction",
+        "output_length": 432,
+        "code_snippet": " int main(int argc, char **argv) {\n FILE *infile = NULL;\n vpx_codec_ctx_t codec = {0};\n vpx_codec_enc_cfg_t cfg = {0};\n int frame_count = 0;\n vpx_imag..."
+      },
+      {
+        "sample_id": 16,
+        "ground_truth_cwe": "CWE-264",
+        "predicted_cwe": "CWE-20",
+        "error_type": "wrong_cwe",
+        "output_length": 540,
+        "code_snippet": "static void veth_setup(struct net_device *dev)\n {\n \tether_setup(dev);\n \n \tdev->netdev_ops = &veth_netdev_ops;\n \tdev->ethtool_ops = &veth_ethtool_ops;\n..."
+      },
+      {
+        "sample_id": 17,
+        "ground_truth_cwe": "CWE-20",
+        "predicted_cwe": "Unknown",
+        "error_type": "unknown_prediction",
+        "output_length": 709,
+        "code_snippet": "void ImageLoader::DoUpdateFromElement(BypassMainWorldBehavior bypass_behavior,\n                                      UpdateFromElementBehavior update_..."
+      }
+    ]
+  }
+}

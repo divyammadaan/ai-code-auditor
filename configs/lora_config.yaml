@@ -1,0 +1,63 @@
+# LoRA / QLoRA Fine-tuning Configuration
+# Justification: QLoRA (4-bit NF4 + LoRA) allows fine-tuning a 7B model
+# on a single 24GB GPU while retaining >95% of full fine-tune quality.
+# LoRA rank r=16 balances expressiveness vs. parameter efficiency.
+
+model:
+  base_model: "codellama/CodeLlama-7b-hf"
+  # Alternative: "deepseek-ai/deepseek-coder-6.7b-base"
+  torch_dtype: "float16"
+  device_map: "auto"
+
+quantization:
+  load_in_4bit: true
+  bnb_4bit_quant_type: "nf4"           # NormalFloat4 — best for normally distributed weights
+  bnb_4bit_compute_dtype: "float16"
+  bnb_4bit_use_double_quant: true      # Nested quantization saves ~0.4 bits/param extra
+
+lora:
+  r: 16                                 # Rank — higher = more capacity, more params
+  lora_alpha: 32                        # Scaling factor (alpha/r = 2 is standard)
+  lora_dropout: 0.05
+  bias: "none"
+  task_type: "CAUSAL_LM"
+  # Target modules for CodeLlama (LLaMA architecture)
+  target_modules:
+    - "q_proj"
+    - "k_proj"
+    - "v_proj"
+    - "o_proj"
+    - "gate_proj"
+    - "up_proj"
+    - "down_proj"
+
+training:
+  output_dir: "./outputs/lora_adapter"
+  num_train_epochs: 3
+  per_device_train_batch_size: 4
+  per_device_eval_batch_size: 4
+  gradient_accumulation_steps: 4       # Effective batch size = 16
+  gradient_checkpointing: true
+  learning_rate: 2.0e-4
+  weight_decay: 0.001
+  lr_scheduler_type: "cosine"
+  warmup_ratio: 0.03
+  max_grad_norm: 0.3
+  fp16: true
+  bf16: false
+  logging_steps: 25
+  eval_steps: 100
+  save_steps: 100
+  save_total_limit: 3
+  load_best_model_at_end: true
+  metric_for_best_model: "eval_loss"
+  report_to: "none"                    # Set to "wandb" for experiment tracking
+  seed: 42
+
+data:
+  max_seq_length: 2048
+  dataset_path: "./data/processed"
+  train_file: "train.jsonl"
+  val_file: "val.jsonl"
+  test_file: "test.jsonl"
+  packing: false                       # Disable for variable-length code snippets

@@ -1,0 +1,162 @@
+[
+  {
+    "cwe": "CWE-416",
+    "cve_id": "CVE-2023-SYNTH-101",
+    "cvss_score": "8.0",
+    "context": "database_engine",
+    "function": "cleanup_query_plan",
+    "status": "full_data_received_validated"
+  },
+  {
+    "cwe": "CWE-416",
+    "cve_id": "CVE-2023-SYNTH-102",
+    "cvss_score": "8.0",
+    "context": "database_engine",
+    "function": "btree_cursor_close",
+    "status": "full_data_received_validated"
+  },
+  {
+    "cwe": "CWE-416",
+    "cve_id": "CVE-2023-SYNTH-103",
+    "cvss_score": "8.0",
+    "context": "database_engine",
+    "function": "rollback_transaction",
+    "status": "full_data_received_validated"
+  },
+  {
+    "cwe": "CWE-416",
+    "cve_id": "CVE-2023-SYNTH-104",
+    "cvss_score": "8.0",
+    "context": "database_engine",
+    "function": "evict_buffer_page",
+    "status": "full_data_received_validated"
+  },
+  {
+    "cwe": "CWE-416",
+    "cve_id": "CVE-2023-SYNTH-105",
+    "cvss_score": "8.0",
+    "context": "database_engine",
+    "function": "index_scan_next",
+    "status": "full_data_received_validated"
+  },
+  {
+    "cwe": "CWE-416",
+    "cve_id": "CVE-2023-SYNTH-106",
+    "cvss_score": "8.0",
+    "context": "database_engine",
+    "function": "close_prepared_statement",
+    "status": "full_data_received_validated"
+  },
+  {
+    "cwe": "CWE-416",
+    "cve_id": "CVE-2023-SYNTH-107",
+    "cvss_score": "8.0",
+    "context": "database_engine",
+    "function": "teardown_connection",
+    "status": "full_data_received_validated"
+  },
+  {
+    "cwe": "CWE-416",
+    "cve_id": "CVE-2023-SYNTH-108",
+    "cvss_score": "8.0",
+    "context": "database_engine",
+    "function": "process_wal_record",
+    "status": "full_data_received_validated"
+  },
+  {
+    "cwe": "CWE-416",
+    "cve_id": "CVE-2023-SYNTH-109",
+    "cvss_score": "8.0",
+    "context": "database_engine",
+    "function": "finalize_join_iterator",
+    "status": "full_data_received_validated"
+  },
+  {
+    "cwe": "CWE-416",
+    "cve_id": "CVE-2023-SYNTH-110",
+    "cvss_score": "8.0",
+    "context": "database_engine",
+    "function": "update_index_entry",
+    "status": "full_data_received_validated"
+  },
+  {
+    "cwe": "CWE-416",
+    "cve_id": "CVE-2023-SYNTH-111",
+    "cvss_score": "8.0",
+    "context": "database_engine",
+    "function": "destroy_lock_request",
+    "status": "full_data_received_validated"
+  },
+  {
+    "cwe": "CWE-416",
+    "cve_id": "CVE-2023-SYNTH-112",
+    "cvss_score": "8.0",
+    "context": "database_engine",
+    "function": "vacuum_page",
+    "status": "full_data_received_validated"
+  },
+  {
+    "cwe": "CWE-416",
+    "cve_id": "CVE-2023-SYNTH-113",
+    "cvss_score": "8.0",
+    "context": "database_engine",
+    "function": "release_tx_savepoint",
+    "status": "full_data_received_validated"
+  },
+  {
+    "cwe": "CWE-416",
+    "cve_id": "CVE-2023-SYNTH-114",
+    "cvss_score": "8.0",
+    "context": "database_engine",
+    "function": "cache_clear_expired",
+    "status": "full_data_received_validated"
+  },
+  {
+    "cwe": "CWE-416",
+    "cve_id": "CVE-2023-SYNTH-115",
+    "cvss_score": "8.0",
+    "context": "database_engine",
+    "function": "handle_wal_flush_error",
+    "status": "full_data_received_validated"
+  },
+  {
+    "cwe": "CWE-416",
+    "cve_id": "CVE-2023-SYNTH-116",
+    "cvss_score": "8.0",
+    "context": "database_engine",
+    "function": "shutdown_pool_worker",
+    "status": "full_data_received_validated"
+  },
+  {
+    "cwe": "CWE-416",
+    "cve_id": "CVE-2023-SYNTH-117",
+    "cvss_score": "8.0",
+    "context": "database_engine",
+    "function": "cleanup_sort_run",
+    "status": "full_data_received_validated"
+  },
+  {
+    "cwe": "CWE-416",
+    "cve_id": "CVE-2023-SYNTH-118",
+    "cvss_score": "8.0",
+    "context": "database_engine",
+    "function": "unregister_aggregate_function",
+    "status": "full_data_received_validated"
+  },
+  {
+    "cwe": "CWE-416",
+    "cve_id": "CVE-2023-SYNTH-119",
+    "cvss_score": "8.0",
+    "context": "database_engine",
+    "function": "process_prepared_batch",
+    "status": "full_data_received_validated"
+  },
+  {
+    "cwe": "CWE-416",
+    "cve_id": "CVE-2023-SYNTH-120",
+    "cvss_score": "8.0",
+    "context": "database_engine",
+    "function": "teardown_index_scan",
+    "status": "full_data_received_validated"
+  }
+]

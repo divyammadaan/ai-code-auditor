@@ -1,0 +1,82 @@
+[
+  {
+    "cwe": "CWE-416",
+    "cve_id": "CVE-2023-SYNTH-321",
+    "cvss_score": "8.4",
+    "vulnerable_code": "void widget_handle_click(widget_t *w, mouse_event_t *ev) {\n    click_ctx_t *ctx = click_ctx_alloc();\n    if (!ctx) return;\n\n    if (!w->visible || w->disabled) {\n        click_ctx_free(ctx);\n    }\n\n    ctx->x      = ev->x;\n    ctx->y      = ev->y;\n    ctx->widget = w;\n    dispatch_event(w->handler, ctx);\n}",
+    "secure_code": "void widget_handle_click(widget_t *w, mouse_event_t *ev) {\n    click_ctx_t *ctx = click_ctx_alloc();\n    if (!ctx) return;\n\n    if (!w->visible || w->disabled) {\n        click_ctx_free(ctx);\n        return;\n    }\n\n    ctx->x      = ev->x;\n    ctx->y      = ev->y;\n    ctx->widget = w;\n    dispatch_event(w->handler, ctx);\n}",
+    "explanation": "click_ctx_free(ctx) is called when the widget is hidden or disabled, but execution continues. ctx->x, ctx->y, and ctx->widget are then written on freed memory. Clicking a hidden or disabled widget triggers this UAF."
+  },
+  {
+    "cwe": "CWE-416",
+    "cve_id": "CVE-2023-SYNTH-322",
+    "cvss_score": "7.8",
+    "vulnerable_code": "int timer_schedule(event_loop_t *loop, uint32_t ms, timer_cb_t cb, void *data) {\n    timer_t *t = timer_alloc();\n    if (!t) return -1;\n\n    if (ms == 0 || ms > MAX_TIMER_MS) {\n        timer_free(t);\n    }\n\n    t->expires  = loop->now + ms;\n    t->callback = cb;\n    t->data     = data;\n    heap_insert(&loop->timers, t);\n    return t->id;\n}",
+    "secure_code": "int timer_schedule(event_loop_t *loop, uint32_t ms, timer_cb_t cb, void *data) {\n    timer_t *t = timer_alloc();\n    if (!t) return -1;\n\n    if (ms == 0 || ms > MAX_TIMER_MS) {\n        timer_free(t);\n        return -1;\n    }\n\n    t->expires  = loop->now + ms;\n    t->callback = cb;\n    t->data     = data;\n    heap_insert(&loop->timers, t);\n    return t->id;\n}",
+    "explanation": "timer_free(t) is called when the delay is zero or too large, but execution continues. t->expires, t->callback, and t->data are then written on freed memory. Scheduling a timer with an invalid delay triggers this UAF."
+  },
+  {
+    "cwe": "CWE-416",
+    "cve_id": "CVE-2023-SYNTH-323",
+    "cvss_score": "8.0",
+    "vulnerable_code": "void window_resize(window_t *win, int new_w, int new_h) {\n    resize_event_t *ev = resize_event_alloc();\n    if (!ev) return;\n\n    if (new_w <= 0 || new_h <= 0) {\n        resize_event_free(ev);\n    }\n\n    ev->old_w = win->width;\n    ev->old_h = win->height;\n    ev->new_w = new_w;\n    ev->new_h = new_h;\n    win->width  = new_w;\n    win->height = new_h;\n    notify_listeners(win, ev);\n    resize_event_free(ev);\n}",
+    "secure_code": "void window_resize(window_t *win, int new_w, int new_h) {\n    resize_event_t *ev = resize_event_alloc();\n    if (!ev) return;\n\n    if (new_w <= 0 || new_h <= 0) {\n        resize_event_free(ev);\n        return;\n    }\n\n    ev->old_w = win->width;\n    ev->old_h = win->height;\n    ev->new_w = new_w;\n    ev->new_h = new_h;\n    win->width  = new_w;\n    win->height = new_h;\n    notify_listeners(win, ev);\n    resize_event_free(ev);\n}",
+    "explanation": "resize_event_free(ev) is called when dimensions are invalid, but execution continues. ev->old_w, ev->old_h, ev->new_w, and ev->new_h are then written on freed memory. Resizing a window to zero or negative dimensions triggers this UAF."
+  },
+  {
+    "cwe": "CWE-416",
+    "cve_id": "CVE-2023-SYNTH-324",
+    "cvss_score": "7.6",
+    "vulnerable_code": "int signal_connect(signal_t *sig, slot_fn_t fn, void *obj) {\n    connection_t *conn = connection_alloc();\n    if (!conn) return -1;\n\n    if (sig->blocked) {\n        connection_free(conn);\n    }\n\n    conn->fn  = fn;\n    conn->obj = obj;\n    conn->id  = ++sig->next_id;\n    list_append(&sig->connections, conn);\n    return conn->id;\n}",
+    "secure_code": "int signal_connect(signal_t *sig, slot_fn_t fn, void *obj) {\n    connection_t *conn = connection_alloc();\n    if (!conn) return -1;\n\n    if (sig->blocked) {\n        connection_free(conn);\n        return -1;\n    }\n\n    conn->fn  = fn;\n    conn->obj = obj;\n    conn->id  = ++sig->next_id;\n    list_append(&sig->connections, conn);\n    return conn->id;\n}",
+    "explanation": "connection_free(conn) is called when the signal is blocked, but execution continues. conn->fn, conn->obj, and conn->id are then written on freed memory. Connecting a slot to a blocked signal triggers this UAF."
+  },
+  {
+    "cwe": "CWE-416",
+    "cve_id": "CVE-2023-SYNTH-325",
+    "cvss_score": "8.2",
+    "vulnerable_code": "void render_frame(renderer_t *r, scene_t *scene) {\n    frame_t *frame = frame_alloc(r->width, r->height);\n    if (!frame) return;\n\n    if (scene->object_count == 0) {\n        frame_free(frame);\n    }\n\n    frame->width  = r->width;\n    frame->height = r->height;\n    frame->data   = r->backbuffer;\n    draw_scene(r, scene, frame);\n    swap_buffers(r, frame);\n    frame_free(frame);\n}",
+    "secure_code": "void render_frame(renderer_t *r, scene_t *scene) {\n    frame_t *frame = frame_alloc(r->width, r->height);\n    if (!frame) return;\n\n    if (scene->object_count == 0) {\n        frame_free(frame);\n        return;\n    }\n\n    frame->width  = r->width;\n    frame->height = r->height;\n    frame->data   = r->backbuffer;\n    draw_scene(r, scene, frame);\n    swap_buffers(r, frame);\n    frame_free(frame);\n}",
+    "explanation": "frame_free(frame) is called when the scene is empty, but execution continues. frame->width, frame->height, and frame->data are then written on freed memory. Rendering an empty scene triggers this UAF."
+  },
+  {
+    "cwe": "CWE-416",
+    "cve_id": "CVE-2023-SYNTH-326",
+    "cvss_score": "7.9",
+    "vulnerable_code": "int keyboard_register_shortcut(kb_mgr_t *mgr, uint32_t key, action_fn_t fn) {\n    shortcut_t *sc = shortcut_alloc();\n    if (!sc) return -1;\n\n    if (key == 0 || fn == NULL) {\n        shortcut_free(sc);\n    }\n\n    sc->key    = key;\n    sc->action = fn;\n    sc->active = 1;\n    hash_insert(&mgr->shortcuts, sc);\n    return sc->id;\n}",
+    "secure_code": "int keyboard_register_shortcut(kb_mgr_t *mgr, uint32_t key, action_fn_t fn) {\n    shortcut_t *sc = shortcut_alloc();\n    if (!sc) return -1;\n\n    if (key == 0 || fn == NULL) {\n        shortcut_free(sc);\n        return -1;\n    }\n\n    sc->key    = key;\n    sc->action = fn;\n    sc->active = 1;\n    hash_insert(&mgr->shortcuts, sc);\n    return sc->id;\n}",
+    "explanation": "shortcut_free(sc) is called when the key or callback is invalid, but execution continues. sc->key, sc->action, and sc->active are then written on freed memory. Registering a keyboard shortcut with a null key or callback triggers this UAF."
+  },
+  {
+    "cwe": "CWE-416",
+    "cve_id": "CVE-2023-SYNTH-327",
+    "cvss_score": "8.6",
+    "vulnerable_code": "void drag_drop_start(dnd_ctx_t *dnd, widget_t *src, void *payload, size_t sz) {\n    drag_op_t *op = drag_op_alloc();\n    if (!op) return;\n\n    if (sz == 0 || sz > DND_MAX_PAYLOAD) {\n        drag_op_free(op);\n    }\n\n    op->source  = src;\n    op->payload = payload;\n    op->size    = sz;\n    op->state   = DND_DRAGGING;\n    dnd->active = op;\n}",
+    "secure_code": "void drag_drop_start(dnd_ctx_t *dnd, widget_t *src, void *payload, size_t sz) {\n    drag_op_t *op = drag_op_alloc();\n    if (!op) return;\n\n    if (sz == 0 || sz > DND_MAX_PAYLOAD) {\n        drag_op_free(op);\n        return;\n    }\n\n    op->source  = src;\n    op->payload = payload;\n    op->size    = sz;\n    op->state   = DND_DRAGGING;\n    dnd->active = op;\n}",
+    "explanation": "drag_op_free(op) is called when the payload size is invalid, but execution continues. op->source, op->payload, op->size, and op->state are then written on freed memory. Starting a drag-and-drop with an empty or oversized payload triggers this UAF."
+  },
+  {
+    "cwe": "CWE-416",
+    "cve_id": "CVE-2023-SYNTH-328",
+    "cvss_score": "7.5",
+    "vulnerable_code": "int menu_add_item(menu_t *menu, const char *label, menu_cb_t cb) {\n    menu_item_t *item = menu_item_alloc();\n    if (!item) return -1;\n\n    if (menu->item_count >= MAX_MENU_ITEMS) {\n        menu_item_free(item);\n    }\n\n    strncpy(item->label, label, MENU_LABEL_MAX);\n    item->callback = cb;\n    item->enabled  = 1;\n    menu->items[menu->item_count++] = item;\n    return 0;\n}",
+    "secure_code": "int menu_add_item(menu_t *menu, const char *label, menu_cb_t cb) {\n    menu_item_t *item = menu_item_alloc();\n    if (!item) return -1;\n\n    if (menu->item_count >= MAX_MENU_ITEMS) {\n        menu_item_free(item);\n        return -1;\n    }\n\n    strncpy(item->label, label, MENU_LABEL_MAX);\n    item->callback = cb;\n    item->enabled  = 1;\n    menu->items[menu->item_count++] = item;\n    return 0;\n}",
+    "explanation": "menu_item_free(item) is called when the menu is full, but execution continues. strncpy and subsequent field writes access freed item memory. Adding an item to a full menu triggers this UAF."
+  },
+  {
+    "cwe": "CWE-416",
+    "cve_id": "CVE-2023-SYNTH-329",
+    "cvss_score": "8.0",
+    "vulnerable_code": "void scroll_view_update(scroll_view_t *sv, scroll_event_t *ev) {\n    scroll_state_t *st = scroll_state_alloc();\n    if (!st) return;\n\n    if (!sv->scrollable_x && !sv->scrollable_y) {\n        scroll_state_free(st);\n    }\n\n    st->delta_x  = ev->dx;\n    st->delta_y  = ev->dy;\n    st->velocity = compute_velocity(ev);\n    apply_scroll(sv, st);\n    scroll_state_free(st);\n}",
+    "secure_code": "void scroll_view_update(scroll_view_t *sv, scroll_event_t *ev) {\n    scroll_state_t *st = scroll_state_alloc();\n    if (!st) return;\n\n    if (!sv->scrollable_x && !sv->scrollable_y) {\n        scroll_state_free(st);\n        return;\n    }\n\n    st->delta_x  = ev->dx;\n    st->delta_y  = ev->dy;\n    st->velocity = compute_velocity(ev);\n    apply_scroll(sv, st);\n    scroll_state_free(st);\n}",
+    "explanation": "scroll_state_free(st) is called when the view is not scrollable in either direction, but execution continues. st->delta_x, st->delta_y, and st->velocity are then written on freed memory. Scrolling a non-scrollable view triggers this UAF."
+  },
+  {
+    "cwe": "CWE-416",
+    "cve_id": "CVE-2023-SYNTH-330",
+    "cvss_score": "8.3",
+    "vulnerable_code": "int animation_start(anim_mgr_t *mgr, widget_t *target, anim_spec_t *spec) {\n    animation_t *anim = animation_alloc();\n    if (!anim) return -1;\n\n    if (spec->duration == 0 || target == NULL) {\n        animation_free(anim);\n    }\n\n    anim->target   = target;\n    anim->duration = spec->duration;\n    anim->easing   = spec->easing;\n    anim->start_t  = mgr->clock;\n    list_append(&mgr->active, anim);\n    return anim->id;\n}",
+    "secure_code": "int animation_start(anim_mgr_t *mgr, widget_t *target, anim_spec_t *spec) {\n    animation_t *anim = animation_alloc();\n    if (!anim) return -1;\n\n    if (spec->duration == 0 || target == NULL) {\n        animation_free(anim);\n        return -1;\n    }\n\n    anim->target   = target;\n    anim->duration = spec->duration;\n    anim->easing   = spec->easing;\n    anim->start_t  = mgr->clock;\n    list_append(&mgr->active, anim);\n    return anim->id;\n}",
+    "explanation": "animation_free(anim) is called when the duration is zero or target is null, but execution continues. anim->target, anim->duration, anim->easing, and anim->start_t are then written on freed memory. Starting an animation with no duration or target triggers this UAF."
+  }
+]

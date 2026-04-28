@@ -1,0 +1,47 @@
+{
+  "finetuned_v4": {
+    "model": "v4 Fine-tuned (QLoRA DeepSeek-6.7B, 5-class)",
+    "bleu4": 12.01,
+    "rougeL": 0.299,
+    "cwe_accuracy": 0.26,
+    "unknown_count": 26,
+    "correct": 26,
+    "total": 100,
+    "per_cwe": {
+      "CWE-20": {
+        "correct": 4,
+        "total": 20,
+        "accuracy": 0.2
+      },
+      "CWE-416": {
+        "correct": 4,
+        "total": 20,
+        "accuracy": 0.2
+      },
+      "CWE-399": {
+        "correct": 7,
+        "total": 20,
+        "accuracy": 0.35
+      },
+      "CWE-264": {
+        "correct": 4,
+        "total": 20,
+        "accuracy": 0.2
+      },
+      "CWE-190": {
+        "correct": 7,
+        "total": 20,
+        "accuracy": 0.35
+      }
+    },
+    "classes_evaluated": [
+      "CWE-20",
+      "CWE-416",
+      "CWE-399",
+      "CWE-264",
+      "CWE-190"
+    ],
+    "train_loss": 0.3816,
+    "eval_loss_best": 0.5251
+  }
+}

@@ -1,0 +1,162 @@
+[
+  {
+    "cwe": "CWE-416",
+    "cve_id": "CVE-2023-SYNTH-141",
+    "cvss_score": "8.5",
+    "context": "graphics_gpu_driver",
+    "function": "gl_delete_texture_object",
+    "status": "full_data_received_validated"
+  },
+  {
+    "cwe": "CWE-416",
+    "cve_id": "CVE-2023-SYNTH-142",
+    "cvss_score": "8.5",
+    "context": "graphics_gpu_driver",
+    "function": "vk_destroy_command_buffer",
+    "status": "full_data_received_validated"
+  },
+  {
+    "cwe": "CWE-416",
+    "cve_id": "CVE-2023-SYNTH-143",
+    "cvss_score": "8.5",
+    "context": "graphics_gpu_driver",
+    "function": "drm_fb_release",
+    "status": "full_data_received_validated"
+  },
+  {
+    "cwe": "CWE-416",
+    "cve_id": "CVE-2023-SYNTH-144",
+    "cvss_score": "8.5",
+    "context": "graphics_gpu_driver",
+    "function": "gpu_mem_free",
+    "status": "full_data_received_validated"
+  },
+  {
+    "cwe": "CWE-416",
+    "cve_id": "CVE-2023-SYNTH-145",
+    "cvss_score": "8.5",
+    "context": "graphics_gpu_driver",
+    "function": "vbo_pool_reset",
+    "status": "full_data_received_validated"
+  },
+  {
+    "cwe": "CWE-416",
+    "cve_id": "CVE-2023-SYNTH-146",
+    "cvss_score": "8.5",
+    "context": "graphics_gpu_driver",
+    "function": "shader_program_teardown",
+    "status": "full_data_received_validated"
+  },
+  {
+    "cwe": "CWE-416",
+    "cve_id": "CVE-2023-SYNTH-147",
+    "cvss_score": "8.5",
+    "context": "graphics_gpu_driver",
+    "function": "fence_recycling_worker",
+    "status": "full_data_received_validated"
+  },
+  {
+    "cwe": "CWE-416",
+    "cve_id": "CVE-2023-SYNTH-148",
+    "cvss_score": "8.5",
+    "context": "graphics_gpu_driver",
+    "function": "vk_render_pass_teardown",
+    "status": "full_data_received_validated"
+  },
+  {
+    "cwe": "CWE-416",
+    "cve_id": "CVE-2023-SYNTH-149",
+    "cvss_score": "8.5",
+    "context": "graphics_gpu_driver",
+    "function": "drm_kms_cleanup_connector",
+    "status": "full_data_received_validated"
+  },
+  {
+    "cwe": "CWE-416",
+    "cve_id": "CVE-2023-SYNTH-150",
+    "cvss_score": "8.5",
+    "context": "graphics_gpu_driver",
+    "function": "gl_unload_shader_binary",
+    "status": "full_data_received_validated"
+  },
+  {
+    "cwe": "CWE-416",
+    "cve_id": "CVE-2023-SYNTH-151",
+    "cvss_score": "8.5",
+    "context": "graphics_gpu_driver",
+    "function": "gpu_resource_manager_purge",
+    "status": "full_data_received_validated"
+  },
+  {
+    "cwe": "CWE-416",
+    "cve_id": "CVE-2023-SYNTH-152",
+    "cvss_score": "8.5",
+    "context": "graphics_gpu_driver",
+    "function": "i915_gem_free_object",
+    "status": "full_data_received_validated"
+  },
+  {
+    "cwe": "CWE-416",
+    "cve_id": "CVE-2023-SYNTH-153",
+    "cvss_score": "8.5",
+    "context": "graphics_gpu_driver",
+    "function": "amdgpu_vram_mgr_del",
+    "status": "full_data_received_validated"
+  },
+  {
+    "cwe": "CWE-416",
+    "cve_id": "CVE-2023-SYNTH-154",
+    "cvss_score": "8.5",
+    "context": "graphics_gpu_driver",
+    "function": "nouveau_fence_teardown",
+    "status": "full_data_received_validated"
+  },
+  {
+    "cwe": "CWE-416",
+    "cve_id": "CVE-2023-SYNTH-155",
+    "cvss_score": "8.5",
+    "context": "graphics_gpu_driver",
+    "function": "radeon_gem_object_free",
+    "status": "full_data_received_validated"
+  },
+  {
+    "cwe": "CWE-416",
+    "cve_id": "CVE-2023-SYNTH-156",
+    "cvss_score": "8.5",
+    "context": "graphics_gpu_driver",
+    "function": "gl_draw_buffer_cleanup",
+    "status": "full_data_received_validated"
+  },
+  {
+    "cwe": "CWE-416",
+    "cve_id": "CVE-2023-SYNTH-157",
+    "cvss_score": "8.5",
+    "context": "graphics_gpu_driver",
+    "function": "vmw_surface_destroy",
+    "status": "full_data_received_validated"
+  },
+  {
+    "cwe": "CWE-416",
+    "cve_id": "CVE-2023-SYNTH-158",
+    "cvss_score": "8.5",
+    "context": "graphics_gpu_driver",
+    "function": "gpu_semaphore_release",
+    "status": "full_data_received_validated"
+  },
+  {
+    "cwe": "CWE-416",
+    "cve_id": "CVE-2023-SYNTH-159",
+    "cvss_score": "8.5",
+    "context": "graphics_gpu_driver",
+    "function": "dri_destroy_drawable",
+    "status": "full_data_received_validated"
+  },
+  {
+    "cwe": "CWE-416",
+    "cve_id": "CVE-2023-SYNTH-160",
+    "cvss_score": "8.5",
+    "context": "graphics_gpu_driver",
+    "function": "msm_gpu_submit_cleanup",
+    "status": "full_data_received_validated"
+  }
+]

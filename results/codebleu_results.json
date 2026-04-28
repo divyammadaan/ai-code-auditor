@@ -1,0 +1,26 @@
+{
+  "v2 Fine-tuned (DeepSeek-6.7B)": {
+    "codebleu": 38.84,
+    "ngram_match": 2.97,
+    "weighted_ngram": 50.63,
+    "syntax_match": 61.6,
+    "dataflow_match": 40.14,
+    "samples": 100
+  },
+  "v3 Fine-tuned + Synthetic": {
+    "codebleu": 40.78,
+    "ngram_match": 3.43,
+    "weighted_ngram": 54.47,
+    "syntax_match": 65.2,
+    "dataflow_match": 40.0,
+    "samples": 100
+  },
+  "v4 Final (Gentle Merge)": {
+    "codebleu": 37.82,
+    "ngram_match": 5.44,
+    "weighted_ngram": 46.45,
+    "syntax_match": 62.6,
+    "dataflow_match": 36.81,
+    "samples": 100
+  }
+}
