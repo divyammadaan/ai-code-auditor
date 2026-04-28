@@ -1,167 +1,82 @@
-# AI Code Auditor — Security Vulnerability Detection with PEFT
+# AI Code Auditor — Automated Security Vulnerability Detection using Fine-tuned LLMs
 
-A Gen AI course project that fine-tunes CodeLlama-7B using QLoRA (Parameter-Efficient Fine-Tuning) to detect security vulnerabilities in C/C++ code and generate secure rewrites.
+A Gen AI project that fine-tunes **DeepSeek-Coder-6.7B** using QLoRA (Parameter-Efficient Fine-Tuning) to detect security vulnerabilities in C/C++ code and generate secure rewrites.
 
 ---
 
-## What We Built
+## What It Does
 
-A system where you paste vulnerable C/C++ code and get back:
+Paste vulnerable C/C++ code and get back:
 - Vulnerability type (CWE ID)
-- CVE reference and CVSS severity score
-- Explanation of what's wrong
+- Natural-language explanation of the flaw
 - Secure rewrite of the code
 
 **Example input:**
 ```c
-void get_username(char *input) {
-    char username[32];
-    strcpy(username, input);
-    printf("Hello, %s\n", username);
+void process_image(unsigned char *data, int width, int height) {
+    int size = width * height * 4;  // RGBA
+    unsigned char *buffer = malloc(size);
+    if (!buffer) return;
+    memcpy(buffer, data, size);
+    free(buffer);
 }
 ```
 
 **Example output:**
 ```
-🟡 CWE-119 detected
-CVE: CVE-2021-XXXX | CVSS: 7.5 (HIGH)
+CWE: CWE-190
+EXPLANATION: The multiplication width * height * 4 can overflow a signed 32-bit
+integer if width and height are large values, resulting in a negative or
+truncated size passed to malloc. The subsequent memcpy will then write beyond
+the allocated buffer boundary.
 
-What's wrong: strcpy copies into a fixed 32-byte buffer with no
-size check — attacker can overflow the buffer.
-
-Secure rewrite:
-void get_username(char *input) {
-    char username[32];
-    strncpy(username, input, sizeof(username) - 1);
-    username[sizeof(username) - 1] = '\0';
-    printf("Hello, %s\n", username);
+SECURE_CODE:
+void process_image(unsigned char *data, int width, int height) {
+    if (width <= 0 || height <= 0) return;
+    if ((size_t)width > SIZE_MAX / 4 / (size_t)height) return;
+    size_t size = (size_t)width * (size_t)height * 4;
+    unsigned char *buffer = malloc(size);
+    if (!buffer) return;
+    memcpy(buffer, data, size);
+    free(buffer);
 }
 ```
 
 ---
 
-## What We Did — Step by Step
+## Results Summary
 
-### Step 1: Dataset
-- Downloaded **Big-Vul** — 188,636 real-world C/C++ functions with CVE-linked vulnerability labels
-- Filtered to vulnerable-only functions with secure rewrites: 10,900 rows
-- Cleaned: removed duplicates, too-short/too-long functions → 7,306 rows
-- **Fixed a critical issue**: original prompts had generic boilerplate completions ("The secure version addresses the vulnerability by applying input validation...") for every single sample — model was learning the template, not the vulnerability patterns
-- Rewrote completions to be sample-specific: each includes the actual CVE, CVSS score, real secure code, and a diff of what changed
-- Applied token budget filter (max 3,200 chars) to remove samples that would get truncated during training — reduced to **3,162 high-quality samples**
-- Stratified 80/10/10 split by CWE category
+The project went through four iterative model versions. Here's the final picture:
 
-### Step 2: Vector Store (RAG)
-- Built a ChromaDB vector store with 15 CVE/CWE vulnerability patterns
-- Used `all-MiniLM-L6-v2` embeddings for semantic search
-- Retriever finds similar vulnerability patterns to augment prompts
+| Version | Base Model | Dataset | CWE Accuracy | BLEU-4 | Key Change |
+|---------|-----------|---------|-------------|--------|-----------|
+| v1 | CodeLlama-7B | 4,624 samples, 39 classes | — | — | Initial experiment — abandoned (too many classes) |
+| v2 | DeepSeek-Coder-6.7B | 2,137 samples | 26% | 5.69 | Switched model, narrowed to top-10 CWEs |
+| v3 | DeepSeek-Coder-6.7B | 2,363 samples | 17% | 5.82 | Added synthetic data + aggressive class capping — caused regression |
+| **v4 (final)** | **DeepSeek-Coder-6.7B** | **2,384 samples** | **26%** | **12.01** | **Gentle merge, no capping — best overall** |
 
-### Step 3: Fine-tuning
-- **Model**: CodeLlama-7B-hf (Meta)
-- **Method**: QLoRA — 4-bit NF4 quantization + LoRA adapters
-- **LoRA config**: r=16, alpha=32, dropout=0.05, target all attention + MLP layers
-- **Trainable parameters**: ~40M out of 6.7B (0.5%)
-- **Training**: 2 epochs, 394 steps, batch size 4 × grad_accum 4 = effective batch 16
-- **Hardware**: Kaggle Tesla T4 (15.6GB VRAM)
-- **Time**: ~3.5 hours
-- **Loss**: 1.0 → 0.24 (67% reduction)
+```
+v4 Training:
+  Loss reduction    : 1.19 → 0.23  (81%)
+  Epochs            : 3
+  Steps             : 447
+  Time              : ~5 hours (2× T4 GPU)
 
-### Step 4: Evaluation
-Ran inference on 100 test samples comparing zero-shot baseline vs fine-tuned:
+v4 Evaluation (100 test samples):
+  BLEU-4            : 5.69 → 12.01  (↑ 111%)
+  ROUGE-L           : 0.270 → 0.299 (↑ 11%)
+  CodeBLEU          : 37.82
+  CWE Accuracy      : 26% (26/100)
+  Unknown Preds     : 26/100 (lowest across all versions)
+  Hallucination Rate: 3% (stable across all versions)
+```
 
-| Metric | Baseline (Zero-shot) | Fine-tuned (QLoRA) | Change |
-|---|---|---|---|
-| BLEU-4 | 1.65 | 2.50 | ↑ 51% |
-| ROUGE-L | 0.163 | 0.272 | ↑ 67% |
-| CWE Top-1 Accuracy | 0.0% | 22.0% | ↑ from nothing |
-| Hallucination Rate | 1.0% | 0.0% | ↓ eliminated |
+**Minority class improvement from synthetic data:**
 
-### Step 5: Demo
-- Built a Gradio web interface on Kaggle
-- User pastes code → clicks Analyze → gets vulnerability report + secure rewrite
-- Public URL shared with faculty for live demo
-
----
-
-## What Works
-
-- **Output format**: Model correctly learned the structured report format (CWE, CVE, CVSS, secure rewrite section)
-- **Secure rewrite direction**: For buffer overflow cases, model correctly identifies that `strcpy` needs to be replaced with a bounded alternative
-- **Zero hallucinations**: Fine-tuned model never introduces new dangerous patterns in rewrites (baseline did 1% of the time)
-- **CWE improvement**: 0% → 22% accuracy — baseline predicted nothing, fine-tuned gets 1 in 5 correct
-- **22 improvement cases**: Out of 100 test samples, 22 cases where fine-tuned got CWE right and baseline didn't
-
----
-
-## What Doesn't Work (Limitations)
-
-### 1. CWE Misclassification — Mode Collapse on CWE-190
-The model predicts **CWE-190 (Integer Overflow)** for almost every input regardless of the actual vulnerability. This is mode collapse — the model learned one dominant output pattern.
-
-**Why it happened:**
-- Training completions used the same generic explanation for all CWEs: *"The issue allows an attacker to exploit improper memory or input handling"*
-- The model couldn't distinguish between CWE types from this generic text
-- CWE-190 may have appeared frequently in training contexts that matched common patterns
-
-**What would fix it:**
-- Write CWE-specific explanations in training data (e.g., for CWE-119: "strcpy copies N bytes without checking buffer size", for CWE-416: "pointer is used after free() releases the memory")
-- This is the single most impactful fix
-
-### 2. Secure Rewrites Are Often Wrong or Incomplete
-For Use After Free (CWE-416), the model replaced the entire function with an unrelated exit check instead of fixing the actual bug.
-
-**Why it happened:**
-- CWE-416 had only ~236 training samples — not enough to learn the pattern
-- The model defaulted to patterns it saw more frequently
-- 2 epochs wasn't enough for rare CWE types to be learned properly
-
-**What would fix it:**
-- Oversample rare CWE categories during training (weighted sampling)
-- More epochs (3-5) for rare categories
-- Larger model (13B or 34B) has more capacity to memorize rare patterns
-
-### 3. Hallucinated Function Names
-The model sometimes generates functions that don't exist in standard C (e.g., `strncpy_safe`).
-
-**Why it happened:**
-- Training data contained secure rewrites from real CVE patches — some patches used project-specific helper functions
-- Model learned these as valid C functions
-
-**What would fix it:**
-- Filter training data to only include standard library functions in secure rewrites
-- Add a post-processing step that validates generated code compiles
-
-### 4. Low BLEU/ROUGE Scores
-BLEU-4 of 2.50 and ROUGE-L of 0.272 are low in absolute terms.
-
-**Why this is expected:**
-- BLEU/ROUGE measure exact n-gram overlap with reference text
-- A secure rewrite can be semantically correct but use different variable names, spacing, or function order than the reference
-- These metrics are not ideal for code generation — CodeBLEU would be better but requires a working C parser
-
-### 5. Only Works on C/C++
-The model was trained exclusively on C/C++ functions from Big-Vul.
-
-**What would fix it:**
-- Add Python (Bandit dataset), Java (Juliet dataset), JavaScript vulnerability datasets
-- Multi-language fine-tuning
-
----
-
-## How to Improve This Project
-
-In order of impact:
-
-| Improvement | Expected Gain | Effort |
-|---|---|---|
-| CWE-specific training completions | CWE accuracy 22% → 50%+ | Medium |
-| 5 epochs instead of 2 | CWE accuracy +10-15% | 3 more hours GPU |
-| Weighted sampling for rare CWEs | Better rare CWE accuracy | Low |
-| Larger model (CodeLlama-13B) | All metrics +20-30% | Need A100 GPU |
-| More training data (10K+ samples) | Significant improvement | High |
-| CodeBLEU evaluation | Better metric for code quality | Low |
-| Post-processing: validate generated code compiles | Eliminate hallucinated functions | Medium |
-| HuggingFace Spaces deployment | Permanent demo URL | 1 hour |
+| CWE | v2 Fine-tuned | v4 Final |
+|-----|--------------|---------|
+| CWE-190 (Integer Overflow) | 0% | 35% |
+| CWE-416 (Use After Free) | 0% | 20% |
 
 ---
 
@@ -171,22 +86,24 @@ In order of impact:
 Input Code
     │
     ▼
-┌─────────────────┐     ┌──────────────────────┐
-│  RAG Retrieval  │────▶│  ChromaDB Vector DB   │
-│  (CVE patterns) │     │  (15 CWE/CVE patterns)│
-└─────────────────┘     └──────────────────────┘
+┌─────────────────┐     ┌──────────────────────────┐
+│  RAG Retrieval  │────▶│  ChromaDB Vector Store    │
+│  (CVE patterns) │     │  (all-MiniLM-L6-v2 embeds)│
+└─────────────────┘     └──────────────────────────┘
     │
     ▼
-┌──────────────────────────────────┐
-│  CodeLlama-7B + LoRA Adapter     │
-│  Fine-tuned on Big-Vul dataset   │
-└──────────────────────────────────┘
+┌──────────────────────────────────────┐
+│  DeepSeek-Coder-6.7B + LoRA Adapter  │
+│  Fine-tuned on Big-Vul dataset (v4)  │
+│  QLoRA: 4-bit NF4, rank-16, ~20M     │
+│  trainable params out of 6.7B        │
+└──────────────────────────────────────┘
     │
     ▼
-┌──────────────────────────────────┐
-│  Structured Output               │
-│  CWE ID · CVE · CVSS · Secure ↓  │
-└──────────────────────────────────┘
+┌──────────────────────────────────────┐
+│  Structured Output                   │
+│  CWE ID · Explanation · Secure Code  │
+└──────────────────────────────────────┘
 ```
 
 ---
@@ -197,110 +114,59 @@ Input Code
 ai-code-auditor/
 ├── data/
 │   ├── preprocessing.py            # Dataset pipeline (load, clean, format, split)
-│   └── processed/                  # train.jsonl, val.jsonl, test.jsonl
+│   ├── processed/                  # v1 train/val/test JSONL
+│   ├── processed_v2/               # v2 train/val/test JSONL
+│   ├── processed_v3/               # v3 train/val/test JSONL
+│   ├── processed_v4/               # v4 train/val/test JSONL (final)
+│   └── synthetic/                  # Synthetic CWE-190 and CWE-416 samples
 ├── models/
 │   ├── inference.py                # Model inference wrapper + output parser
 │   ├── finetune.py                 # Fine-tuning pipeline
 │   ├── baseline.py                 # Zero-shot baseline evaluator
-│   └── lora_adapter/               # Trained LoRA weights (not in Git — too large)
+│   ├── lora_adapter/               # v1 LoRA config + tokenizer (weights not in Git)
+│   ├── lora_adapter_v2/            # v2 LoRA config + tokenizer (weights not in Git)
+│   ├── lora_adapter_v3/            # v3 LoRA config + tokenizer (weights not in Git)
+│   └── lora_adapter_v4/            # v4 LoRA config + tokenizer (weights not in Git)
 ├── rag/
 │   ├── vectorstore.py              # ChromaDB setup and search
 │   ├── retriever.py                # Similarity search + prompt augmentation
 │   └── cve_loader.py               # CVE/CWE pattern definitions
 ├── evaluation/
-│   ├── metrics.py                  # BLEU, ROUGE, CWE accuracy, hallucination rate
-│   ├── qualitative.py              # Error categorization, failure case analysis
-│   └── compare.py                  # Baseline vs fine-tuned comparison charts
+│   ├── metrics.py                  # BLEU-4, ROUGE-L, CodeBLEU, CWE accuracy
+│   ├── qualitative.py              # Error categorisation, failure case analysis
+│   └── compare.py                  # Cross-version comparison charts
 ├── api/
-│   ├── main.py                     # FastAPI app (requires GPU to run /audit)
+│   ├── main.py                     # FastAPI app (POST /audit, /search, GET /patterns, /health)
 │   └── schemas.py                  # Pydantic request/response models
 ├── notebooks/
-│   ├── 01_data_exploration.py      # Dataset stats and CWE distribution charts
-│   ├── 02_baseline_evaluation.py   # Baseline evaluation setup
-│   ├── 03_finetuning_experiment.py # Training loss analysis (runs locally)
-│   ├── 04_results_analysis.py      # Final comparison charts (runs locally)
-│   ├── kaggle_finetune.ipynb       # Training notebook (run on Kaggle T4)
-│   ├── kaggle_evaluate.ipynb       # Evaluation notebook (run on Kaggle T4)
-│   └── kaggle_demo.ipynb           # Gradio demo notebook (run on Kaggle T4)
+│   ├── kaggle_finetune_v2.ipynb    # v2 training notebook (Kaggle T4)
+│   ├── kaggle_finetune_v4.ipynb    # v4 training notebook (Kaggle T4) ← final
+│   ├── kaggle_evaluate_v2.ipynb    # v2 evaluation notebook
+│   ├── kaggle_evaluate_v4.ipynb    # v4 evaluation notebook ← final
+│   ├── kaggle_demo_v2.ipynb        # v2 Gradio demo
+│   ├── kaggle_demo_v4.ipynb        # v4 Gradio demo ← final
+│   └── training_log_v4.json        # v4 training loss log
 ├── configs/
 │   ├── lora_config.yaml            # LoRA hyperparameters
-│   └── training_config.yaml        # Dataset and training settings
+│   ├── training_config.yaml        # v4 training settings
+│   └── training_config_v3.yaml     # v3 training settings
 ├── scripts/
-│   ├── download_dataset.py         # Download Big-Vul from Google Drive
 │   ├── build_vectorstore.py        # Build ChromaDB vector store
-│   └── run_evaluation.py           # Full evaluation pipeline
-├── results/                        # All generated charts and metrics
-│   ├── final_comparison.png
-│   ├── training_loss_curve.png
-│   ├── per_cwe_accuracy.png
-│   ├── evaluation_metrics.json
-│   └── qualitative_report.json
-└── tests/                          # Unit tests
-```
-
----
-
-## Quick Start
-
-### 1. Install
-```bash
-pip install -r requirements.txt
-```
-
-### 2. Download and preprocess dataset
-```bash
-python scripts/download_dataset.py
-python data/preprocessing.py
-```
-
-### 3. Build vector store
-```bash
-python scripts/build_vectorstore.py
-```
-
-### 4. Run analysis notebooks locally (no GPU needed)
-```bash
-python notebooks/01_data_exploration.py   # dataset charts
-python notebooks/03_finetuning_experiment.py  # training loss curves
-python notebooks/04_results_analysis.py  # comparison charts
-```
-
-### 5. Fine-tune on Kaggle (GPU required)
-- Upload `notebooks/kaggle_finetune.ipynb` to Kaggle
-- Add `bigvul-processed` dataset (train/val/test JSONL files)
-- Set GPU to T4 x1, enable Internet
-- Run all cells (~3.5 hours)
-- Download `lora_adapter_download.zip` from Output tab
-
-### 6. Evaluate on Kaggle
-- Upload `notebooks/kaggle_evaluate.ipynb`
-- Add `bigvul-processed` + `lora-adapter` datasets
-- Run all cells (~1 hour)
-- Download `evaluation_metrics.json`, `comparison_chart.png`, `qualitative_report.json`
-
-### 7. Run live demo on Kaggle
-- Upload `notebooks/kaggle_demo.ipynb`
-- Add `lora-adapter` dataset
-- Set GPU to T4 x1
-- Run all cells → get public Gradio URL (valid 1 week)
-
----
-
-## Results Summary
-
-```
-Training:
-  Loss reduction    : 1.0 → 0.24  (67%)
-  Epochs            : 2
-  Steps             : 394
-  Time              : 3.5 hours (T4 GPU)
-
-Evaluation (100 test samples):
-  BLEU-4            : 1.65 → 2.50  (↑ 51%)
-  ROUGE-L           : 0.163 → 0.272 (↑ 67%)
-  CWE Accuracy      : 0% → 22%     (↑ from nothing)
-  Hallucination Rate: 1% → 0%      (eliminated)
-  Improvement cases : 22 / 100
+│   ├── create_v4_dataset.py        # Build v4 dataset with synthetic data
+│   ├── prepare_v2_dataset.py       # Build v2 dataset
+│   ├── analyze_v4_results.py       # v4 results analysis
+│   ├── compute_codebleu.py         # CodeBLEU computation
+│   └── run_qualitative_analysis.py # Qualitative error analysis
+├── results/                        # All generated charts and metrics (all versions)
+│   ├── evaluation_metrics_v4.json  # v4 final metrics
+│   ├── finetuned_results_v4.jsonl  # v4 inference outputs
+│   ├── v2_v3_v4_comparison.png     # Cross-version comparison chart
+│   └── ...
+├── tests/                          # Unit tests
+├── frontend/index.html             # Single-page demo UI
+├── requirements.txt
+├── setup.py
+└── start_api.py                    # Launch FastAPI server
 ```
 
 ---
@@ -308,22 +174,100 @@ Evaluation (100 test samples):
 ## Tech Stack
 
 | Component | Technology |
-|---|---|
-| Base model | CodeLlama-7B (Meta) |
-| Fine-tuning | PEFT / QLoRA (HuggingFace + TRL) |
-| Vector DB | ChromaDB + sentence-transformers |
-| Evaluation | sacrebleu, rouge-score |
-| API | FastAPI |
-| Demo UI | Gradio |
-| Training platform | Kaggle (T4 GPU) |
-| Dataset | Big-Vul (MSR 2020) |
+|-----------|-----------|
+| Base model | DeepSeek-Coder-6.7B (`deepseek-ai/deepseek-coder-6.7b-base`) |
+| Fine-tuning | PEFT / QLoRA (Hugging Face PEFT + TRL) |
+| Quantisation | bitsandbytes — 4-bit NF4, double quantisation |
+| Vector DB | ChromaDB + sentence-transformers (`all-MiniLM-L6-v2`) |
+| Evaluation | sacrebleu, rouge-score, codebleu, scikit-learn |
+| API | FastAPI + uvicorn |
+| Demo UI | Gradio (Kaggle) / vanilla HTML frontend |
+| Training platform | Kaggle (2× NVIDIA T4, 16 GB VRAM each) |
+| Dataset | Big-Vul (Fan et al., MSR 2020) + synthetic data |
 
 ---
 
-## Important Notes
+## Quick Start
 
-- `models/lora_adapter/adapter_model.safetensors` (~1GB) is not in Git — download from Kaggle output
-- `data/raw/` (10GB CSV) is not in Git — re-download with `scripts/download_dataset.py`
-- The `/audit` API endpoint requires a GPU — won't work locally on CPU
-- Gradio demo link expires after 1 week — re-run `kaggle_demo.ipynb` to get a new one
-- For a permanent demo URL, deploy to HuggingFace Spaces using `gradio deploy`
+### 1. Install dependencies
+```bash
+pip install -r requirements.txt
+```
+
+### 2. Build the vector store
+```bash
+python scripts/build_vectorstore.py
+```
+
+### 3. Run the API (requires GPU)
+```bash
+python start_api.py
+```
+The API will be available at `http://localhost:8000`. See `/docs` for the OpenAPI spec.
+
+### 4. Fine-tune on Kaggle (GPU required)
+- Upload `notebooks/kaggle_finetune_v4.ipynb` to Kaggle
+- Add the processed v4 dataset (JSONL files from `data/processed_v4/`)
+- Set accelerator to GPU T4 x2, enable Internet
+- Run all cells (~5 hours)
+- Download the `lora_adapter` output folder
+
+### 5. Evaluate on Kaggle
+- Upload `notebooks/kaggle_evaluate_v4.ipynb`
+- Add the processed dataset + downloaded LoRA adapter
+- Run all cells (~1 hour)
+
+### 6. Run the Gradio demo on Kaggle
+- Upload `notebooks/kaggle_demo_v4.ipynb`
+- Add the LoRA adapter dataset
+- Run all cells → get a public Gradio URL (valid 72 hours)
+
+---
+
+## API Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/audit` | Primary vulnerability analysis — runs LLM + RAG |
+| POST | `/search` | Semantic similarity search against the vector store |
+| GET | `/patterns` | List all indexed vulnerability patterns |
+| GET | `/health` | System health check |
+
+**Example request:**
+```bash
+curl -X POST http://localhost:8000/audit \
+  -H "Content-Type: application/json" \
+  -d '{"code": "void foo(char *src) { char buf[32]; strcpy(buf, src); }"}'
+```
+
+---
+
+## Model Weights
+
+The LoRA adapter weights (`adapter_model.safetensors`, ~153 MB per version) are not stored in this repository — they exceed GitHub's file size limit. Download them from the Kaggle output of the corresponding training notebook, or retrain using the notebooks provided.
+
+The adapter configs and tokenizer files for all versions are included in `models/lora_adapter_v*/`.
+
+---
+
+## Known Limitations
+
+- **26% CWE accuracy** — the dominant failure mode is Unknown predictions (model abstains rather than guessing wrong), which is a reasonable safety property but limits utility
+- **512-token context window** — longer functions get truncated; extending to 1024+ tokens is the most impactful next step
+- **C/C++ only** — trained exclusively on Big-Vul; no Python, Java, or JavaScript support
+- **GPU required for inference** — the `/audit` endpoint will not run on CPU in reasonable time
+- **Gradio demo link expires** — re-run `kaggle_demo_v4.ipynb` to get a fresh URL; for a permanent deployment use `gradio deploy` to HuggingFace Spaces
+
+---
+
+## Dataset
+
+The project uses [Big-Vul](https://github.com/ZeoVan/MSR_20_Code_vulnerability_dataset_package) (Fan et al., MSR 2020) — 188,636 real-world C/C++ functions with CVE-linked vulnerability labels. The top-10 most frequent CWE classes were used, supplemented with synthetic samples for two minority classes (CWE-190 and CWE-416).
+
+`data/raw/` is not included in this repository (10 GB CSV). The preprocessed JSONL splits for all four dataset versions are included in `data/processed_v*/`.
+
+---
+
+## Project Report
+
+See [`PROJECT_REPORT.md`](PROJECT_REPORT.md) for the full academic report covering methodology, literature review, all four model versions, detailed results tables, and conclusions.
